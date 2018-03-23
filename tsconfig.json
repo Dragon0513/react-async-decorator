@@ -1,0 +1,18 @@
+{
+    "target": "es6",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "compilerOptions": {
+        "outDir": "./dist/js/",
+        "target": "es5",
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "module": "commonjs",
+        "allowSyntheticDefaultImports": true,
+        "lib": ["es6", "es2016"],
+        "experimentalDecorators": true
+    },
+    "exclude": [
+        "node_modules",
+    ]
+}
