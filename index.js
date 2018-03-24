@@ -87,7 +87,23 @@ function asyncClassFactory(opts) {
         __extends(WrapClass, Base);
         function WrapClass() {
             Base.apply(this, arguments);
-            this.render = wrapRender(this.render, this.renderLoader, this.renderError);
+            var ptrLoader = this.renderLoader;
+            var ptrError = this.renderError;
+            if (opts) {
+                var renderLoader = opts.renderLoader;
+                if (typeof renderLoader === 'function') {
+                    ptrLoader = this.renderLoader = renderLoader;
+                } else if (typeof renderLoader === 'string') {
+                    ptrLoader = this[renderLoader];
+                }
+                var renderError = opts.renderError;
+                if (typeof renderError === 'function') {
+                    ptrError = this.renderError = renderError;
+                } else if (typeof renderError === 'string') {
+                    ptrError = this[renderError]
+                }
+            }
+            this.render = wrapRender(this.render, ptrLoader, ptrError);
             if (this.renderLoader === undefined) {
                 this.renderLoader = function () {
                     return (opts && opts.renderLoader) ? opts.renderLoader() : null;

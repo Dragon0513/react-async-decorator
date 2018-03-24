@@ -6,8 +6,8 @@ export class Fetcher<T> {
 }
 
 export interface IAsyncFetch {
-	renderLoader?: () => any | string;
-	renderError?: (err: Error) => any | string;
+	renderLoader?: string | (() => any);
+	renderError?: string | ((err: Error) => any);
 }
 
 export interface BaseT {
