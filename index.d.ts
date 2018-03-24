@@ -15,9 +15,7 @@ export interface BaseT {
 }
 
 export function asyncClassFactory(opts?: IAsyncFetch): <T extends BaseT>(c: T) => T;
-
 export const asyncClass: <T extends BaseT>(c: T) => T;
-
 export function asyncMethodFactory(opts?: IAsyncFetch): (target: any, propertyKey: string) => void;
 export const asyncMethod: (target: any, propertyKey: string) => void;
 export function createFetcher<T>(fn: () => Promise<T>): Fetcher<T>;
