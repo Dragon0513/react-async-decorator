@@ -1,5 +1,7 @@
 # react-async-decorator
 
+[![Build Status](https://travis-ci.org/lexich/react-async-decorator.svg?branch=master)](https://travis-ci.org/lexich/react-async-decorator)
+
 ## Examples
 ```js
 import { asyncClass, createFetcher } from 'react-async-decorator';
