@@ -4,4 +4,4 @@ exports[`render data 1`] = `"<div data-reactroot=\\"\\">content</div>"`;
 
 exports[`render error 1`] = `"<div data-reactroot=\\"\\">custom error</div>"`;
 
-exports[`render loading 1`] = `"<div data-reactroot=\\"\\">custom loading</div>"`;
+exports[`render loading 1`] = `"<div data-reactroot=\\"\\">overwrite loading</div>"`;

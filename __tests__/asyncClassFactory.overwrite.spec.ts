@@ -3,17 +3,20 @@ import { asyncClassFactory, createFetcher, Fetcher } from '../index';
 import { renderToString } from 'react-dom/server'
 import { createApi, IApi } from './helpers';
 
-@asyncClassFactory({
-    renderLoader: 'loader',
+
+const asyncClass = asyncClassFactory({
+    renderLoader: () => React.createElement('div', {}, 'default loader'),
     renderError: err => React.createElement('div', {}, err.message)
-})
+});
+
+@asyncClass
 class Test extends React.Component<{ fetcher: Fetcher<string>}, {}> {
     render() {
         const data = this.props.fetcher.get();
         return React.createElement('div', {}, data);
     }
-    loader() {
-        return React.createElement('div', {}, 'custom loading');
+    renderLoader() {
+        return React.createElement('div', {}, 'overwrite loading');
     }
 }
 

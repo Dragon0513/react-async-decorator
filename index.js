@@ -128,28 +128,28 @@ function asyncClassFactory(opts) {
             if (opts) {
                 var renderLoader = opts.renderLoader;
                 if (typeof renderLoader === 'function') {
-                    ptrLoader = this.renderLoader = renderLoader;
+                    ptrLoader = renderLoader;
                 } else if (typeof renderLoader === 'string') {
                     ptrLoader = this[renderLoader];
                 }
                 var renderError = opts.renderError;
                 if (typeof renderError === 'function') {
-                    ptrError = this.renderError = renderError;
+                    ptrError = renderError;
                 } else if (typeof renderError === 'string') {
                     ptrError = this[renderError]
                 }
             }
-            this.render = wrapRender(this.render, ptrLoader, ptrError);
             if (this.renderLoader === undefined) {
-                this.renderLoader = function () {
-                    return (opts && opts.renderLoader) ? opts.renderLoader() : null;
-                };
+                this.renderLoader = ptrLoader;
+            } else {
+                ptrLoader = this.renderLoader;
             }
             if (this.renderError === undefined) {
-                this.renderError = function (err) {
-                    return (opts && opts.renderError) ? opts.renderError(err) : null;
-                };
+                this.renderError = ptrError;
+            } else {
+                ptrError = this.renderError;
             }
+            this.render = wrapRender(this.render, ptrLoader, ptrError);
             return this;
         }
 		return  WrapClass;
