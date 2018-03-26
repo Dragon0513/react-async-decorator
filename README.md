@@ -55,12 +55,6 @@ class Test1 {
 
 }
 const WrapTest1 = asyncClass(Test1);
-
-class Test2 {
-    renderWrap: asyncMethod(function() {
-
-    })
-}
 ```
 
 ## Documentation
