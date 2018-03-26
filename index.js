@@ -9,47 +9,83 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 
+
+var createHasher = function () {
+    var data = [];
+    function get() {
+        var block = Array.prototype.slice.apply(arguments);
+        var blockLen = block.length;
+        var isEqual = true;
+        var item;
+        for (var i = 0, iLen = data.length; i < iLen; i++) {
+            item = data[i];
+            if (item.length === blockLen) {
+                isEqual = true;
+                for (var j = 0; j < blockLen; j++) {
+                    if (block[j] !== item[j]) {
+                        isEqual = false;
+                        break;
+                    }
+                }
+                if (isEqual) {
+                    return i;
+                }
+            }
+        }
+        var block = Array.prototype.slice.apply(arguments);
+        data.push(block);
+        return data.length - 1;
+    }
+    function clear() {
+        data = [];
+    }
+    return { get: get, clear: clear };
+}
+module.exports.createHasher = createHasher;
+
 module.exports.Fetcher = Fetcher;
 function Fetcher(load) {
     this.load = load;
-    this.hasData = false;
-    this.data = undefined;
-    this.error = undefined;
-    this.defer = undefined;
+    this.hasher = createHasher();
+    this.holder = [];
 }
 
 Fetcher.prototype.clear = function () {
-    this.hasData = false;
-    this.data = undefined;
-    this.defer = undefined;
-    this.error = undefined;
+    this.hasher.clear();
+    this.holder = [];
 };
-Fetcher.prototype.has = function (defer) {
-    return this.defer === defer;
-};
-Fetcher.prototype.set = function (defer) {
-    var _this = this;
-    if (this.defer !== defer) {
-        this.clear();
-        this.defer = defer;
-        defer.then(function (data) {
-            _this.hasData = true;
-            _this.data = data;
-            return data;
-        }, function (err) { return (_this.error = err); });
-    }
-};
+
 Fetcher.prototype.get = function () {
-    if (this.error !== undefined) {
-        throw this.error;
+    var index = this.hasher.get.apply(null, arguments);
+    var ptr = this.holder[index] || (
+        this.holder[index] = {
+            hasData: false,
+            data: undefined,
+            error: undefined,
+            defer: defer
+        }
+    );
+    if (ptr.error !== undefined) {
+        throw ptr.error;
     }
-    if (!this.defer) {
-        this.set(this.load());
+    if (ptr.defer === undefined) {
+        var defer = this.load.apply(null, arguments);
+        ptr.defer = defer;
+        defer.then(
+            function (data) {
+                ptr.hasData = true;
+                ptr.data = data;
+                return data;
+            },
+            function (err) {
+                return (ptr.error = err);
+            }
+        );
     }
-    if (!this.hasData) {
-        throw this.defer;
+    if (!ptr.hasData) {
+        throw ptr.defer;
     }
-    return this.data;
+    return ptr.data;
 };
 
 function wrapRender(render, renderLoader, renderError) {
