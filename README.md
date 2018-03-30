@@ -9,7 +9,7 @@ import { asyncClass, createFetcher } from 'react-async-decorator';
 class Test extends React.Component {
     fetcher = createFetcher(() => fetch('/data.json'))
     render() {
-        const data = this.props.fetcher.get();
+        const data = this.fetcher.get();
         // This content will be rendered after success response of fetch request
         return <div>{data}</div>;
     }
@@ -35,7 +35,7 @@ class Test extends React.Component {
     }
     @asyncMethod
     renderContent() {
-        const data = this.props.fetcher.get();
+        const data = this.fetcher.get();
         // This content will be rendered after success response of fetch request
         return <div>{data}</div>;
     }
