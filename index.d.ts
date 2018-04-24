@@ -1,6 +1,9 @@
 export class Fetcher<T> {
     clear(): void;
     get(...args: any[]): T;
+    asyncGet(...args: any[]): Promise<T>;
+    awaitAll(): Promise<T[]>;
+    await(...args: any[]): Promise<T>;
 }
 export function createFetcher<T>(fn: (...args: any[]) => Promise<T>): Fetcher<T>;
 

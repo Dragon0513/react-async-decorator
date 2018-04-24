@@ -32,7 +32,6 @@ var createHasher = function () {
                 }
             }
         }
-        var block = Array.prototype.slice.apply(arguments);
         data.push(block);
         return data.length - 1;
     }
@@ -54,6 +53,36 @@ Fetcher.prototype.clear = function () {
     this.hasher.clear();
     this.holder = [];
 };
+
+Fetcher.prototype.awaitAll = function() {
+    const allDefers = this.holder.map(function(p) {
+        return p.defer;
+    });
+    return Promise.all(allDefers);
+}
+
+Fetcher.prototype.await = function() {
+    var index = this.hasher.get.apply(null, arguments);
+    const ptr = this.holder[index];
+    if (!ptr) {
+        return Promise.reject('There isn\'t such defered object')
+    } else {
+        return this.holder.defer;
+    }
+}
+
+Fetcher.prototype.asyncGet = function() {
+    try {
+        const result = this.get.apply(this, arguments);
+        return Promise.resolve(result);
+    } catch (e) {
+        if (e instanceof Promise) {
+            return e;
+        } else {
+            return Promise.reject(e);
+        }
+    }
+}
 
 Fetcher.prototype.get = function () {
     var index = this.hasher.get.apply(null, arguments);

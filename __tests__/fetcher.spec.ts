@@ -25,3 +25,11 @@ test('fetcher test', async () => {
     await api.defer;
     expect(fetcher.get() === sendData).toBeTruthy();
 });
+
+test('fetchert asyncGet', async () => {
+    const api = createApi();
+    const fetcher = createFetcher(api.fetch);
+    api.resolve(true);
+    const data = await fetcher.asyncGet();
+    expect(data).toEqual(true);
+});
