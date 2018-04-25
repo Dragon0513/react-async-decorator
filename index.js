@@ -1,3 +1,5 @@
+var create = require('./fetcher').create;
+
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -8,114 +10,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-
-
-var createHasher = function () {
-    var data = [];
-    function get() {
-        var block = Array.prototype.slice.apply(arguments);
-        var blockLen = block.length;
-        var isEqual = true;
-        var item;
-        for (var i = 0, iLen = data.length; i < iLen; i++) {
-            item = data[i];
-            if (item.length === blockLen) {
-                isEqual = true;
-                for (var j = 0; j < blockLen; j++) {
-                    if (block[j] !== item[j]) {
-                        isEqual = false;
-                        break;
-                    }
-                }
-                if (isEqual) {
-                    return i;
-                }
-            }
-        }
-        data.push(block);
-        return data.length - 1;
-    }
-    function clear() {
-        data = [];
-    }
-    return { get: get, clear: clear };
-}
-module.exports.createHasher = createHasher;
-
-module.exports.Fetcher = Fetcher;
-function Fetcher(load) {
-    this.load = load;
-    this.hasher = createHasher();
-    this.holder = [];
-}
-
-Fetcher.prototype.clear = function () {
-    this.hasher.clear();
-    this.holder = [];
-};
-
-Fetcher.prototype.awaitAll = function() {
-    const allDefers = this.holder.map(function(p) {
-        return p.defer;
-    });
-    return Promise.all(allDefers);
-}
-
-Fetcher.prototype.await = function() {
-    var index = this.hasher.get.apply(null, arguments);
-    const ptr = this.holder[index];
-    if (!ptr) {
-        return Promise.reject('There isn\'t such defered object')
-    } else {
-        return this.holder.defer;
-    }
-}
-
-Fetcher.prototype.asyncGet = function() {
-    try {
-        const result = this.get.apply(this, arguments);
-        return Promise.resolve(result);
-    } catch (e) {
-        if (e instanceof Promise) {
-            return e;
-        } else {
-            return Promise.reject(e);
-        }
-    }
-}
-
-Fetcher.prototype.get = function () {
-    var index = this.hasher.get.apply(null, arguments);
-    var ptr = this.holder[index] || (
-        this.holder[index] = {
-            hasData: false,
-            data: undefined,
-            error: undefined,
-            defer: defer
-        }
-    );
-    if (ptr.error !== undefined) {
-        throw ptr.error;
-    }
-    if (ptr.defer === undefined) {
-        var defer = this.load.apply(null, arguments);
-        ptr.defer = defer;
-        defer.then(
-            function (data) {
-                ptr.hasData = true;
-                ptr.data = data;
-                return data;
-            },
-            function (err) {
-                return (ptr.error = err);
-            }
-        );
-    }
-    if (!ptr.hasData) {
-        throw ptr.defer;
-    }
-    return ptr.data;
-};
 
 function wrapRender(render, renderLoader, renderError) {
     var catchDefer = null;
@@ -220,8 +114,62 @@ function asyncMethodFactory(opts) {
 
 module.exports.asyncMethod = asyncMethodFactory();
 
-module.exports.createFetcher = createFetcher;
-function createFetcher(fn) {
-    return new Fetcher(fn);
-}
+module.exports.createFetcher = create();
 
+function createReduxFetcher(ACTION, KEY) {
+    var api;
+
+    function use(aApi) {
+        api = aApi;
+        return function(next) {
+            return function(action) {
+                return next(action);
+            }
+        };
+    }
+
+    function getApi() {
+        if (!api) {
+            throw new Error('add middleware to redux');
+        }
+        return api;
+    }
+
+    function createAccessor(name) {
+        function clear() {
+            getApi().dispatch({ type: ACTION, data: {} });
+        }
+        function get(key) {
+            var state = getApi().getState();
+            var data = state[KEY];
+            var ptr = data ? data[key] : undefined;
+            return (ptr && ptr[key]) ? ptr[key].d : undefined;
+        }
+        function set(key, val) {
+            var state = getApi().getState();
+            var data = Object.assign({}, state[KEY]);
+            var ptr = data[name] = Object.assign({}, data[name]);
+            ptr[key] = { d: val };
+            getApi().dispatch({ type: ACTION, data: data });
+        }
+        function has(key) {
+            var state = getApi().getState();
+            var data = state[KEY];
+            var ptr = data ? data[key] : undefined;
+            return ptr ? !!ptr[key] : false;
+        }
+        return { clear: clear, set: set, has: has, get: get };
+    }
+
+    function reducer(state, action) {
+        if (action.type === ACTION) {
+            var data = Object.assign({}, state);
+            data[KEY] = action.data;
+            return data;
+        }
+        return state;
+    }
+
+    var createFetcher = create(createAccessor);
+    return { use: use, reducer: reducer, createFetcher: createFetcher };
+}
