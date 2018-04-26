@@ -115,6 +115,7 @@ function asyncMethodFactory(opts) {
 module.exports.asyncMethod = asyncMethodFactory();
 
 module.exports.createFetcher = create();
+module.exports.createReduxFetcher = createReduxFetcher;
 
 function createReduxFetcher(ACTION, KEY) {
     var api;
@@ -153,10 +154,10 @@ function createReduxFetcher(ACTION, KEY) {
             getApi().dispatch({ type: ACTION, data: data });
         }
         function has(key) {
-            var state = getApi().getState();
-            var data = state[KEY];
+            var state = getApi().getState()[KEY];
+            var data = state[name];
             var ptr = data ? data[key] : undefined;
-            return ptr ? !!ptr[key] : false;
+            return !!ptr;
         }
         return { clear: clear, set: set, has: has, get: get };
     }

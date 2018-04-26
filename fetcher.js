@@ -47,9 +47,8 @@ Fetcher.prototype.get = function () {
     return this.holder.get(key);
 };
 
-var counter = 0;
-
 function create(accessor) {
+    var counter = 0;
     function createFetcher(load, name) {
         var pname = (name === undefined || name === null) ? ('' + counter++) : name;
         return new Fetcher({ load: load, name: pname, accessor: accessor });

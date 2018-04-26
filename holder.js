@@ -17,22 +17,22 @@ function createAccessor() {
 
 
 function Holder(opts) {
-    this.accesor = opts.accesor ? opts.accesor(opts.name) : createAccessor();
+    this.accessor = opts.accessor ? opts.accessor(opts.name) : createAccessor();
     this.container = {};
 }
 
 Holder.prototype.clear = function() {
-    this.accesor.clear();
+    this.accessor.clear();
     this.container = {};
 }
 
 
 Holder.prototype.get = function(key) {
-    return this.accesor.get(key);
+    return this.accessor.get(key);
 }
 
 Holder.prototype.has = function(key) {
-    return this.accesor.has(key);
+    return this.accessor.has(key);
 }
 
 Holder.prototype.error = function(key) {
@@ -52,9 +52,9 @@ Holder.prototype.set = function(key, defer) {
     this.container[key] = ptr;
     var t = this;
     defer.then(function(data) {
-        t.accesor.set(key, data);
+        t.accessor.set(key, data);
     }, function(err) {
-        t.accesor.set(key, undefined);
+        t.accessor.set(key, undefined);
         ptr.error = err;
     });
 }
