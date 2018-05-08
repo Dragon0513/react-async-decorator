@@ -1,6 +1,6 @@
 {
   "name": "react-async-decorator",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "index.js",
   "typings": "index.d.ts",
   "repository": "git@github.com:lexich/react-async-decorator.git",
