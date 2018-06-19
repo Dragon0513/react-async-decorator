@@ -4,10 +4,11 @@
 
 ## Examples
 ```js
-import { asyncClass, createFetcher } from 'react-async-decorator';
+import { asyncClass, initFetchers } from 'react-async-decorator';
+const config = initFetchers();
 @asyncClass
 class Test extends React.Component {
-    fetcher = createFetcher(() => fetch('/data.json'))
+    fetcher = config.createFetcher(() => fetch('/data.json'))
     render() {
         const data = this.fetcher.get();
         // This content will be rendered after success response of fetch request
@@ -25,10 +26,10 @@ class Test extends React.Component {
 ```
 
 ```js
-import { asyncMethod, createFetcher } from 'react-async-decorator';
-
+import { asyncMethod, initFetchers } from 'react-async-decorator';
+const config = initFetchers();
 class Test extends React.Component {
-    fetcher = createFetcher(() => fetch('/data.json'))
+    fetcher = config.createFetcher(() => fetch('/data.json'))
     render() {
         // This content will be rendered always
         return <div>{ this.renderContent() }</div>;
@@ -58,7 +59,8 @@ const WrapTest1 = asyncClass(Test1);
 ```
 
 ## Documentation
-> createFetcher(): Fetcher - create special fetcher, that return `Fetcher` object that allow to construct access to async data.
+> initFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data.
+> initReduxFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data with store it in redux store
 
 > asyncMethod - wraps class method to use fetcher functionality in it.
 

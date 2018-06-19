@@ -5,7 +5,7 @@ Object {
   "action": Object {
     "0": Object {
       "": Object {
-        "d": 123,
+        "data": 123,
       },
     },
   },
@@ -15,9 +15,23 @@ Object {
 exports[`predefined state shouldns overwrite 1`] = `
 Object {
   "action": Object {
-    "0": Object {
+    "test": Object {
       "": Object {
-        "d": 999,
+        "data": 123,
+      },
+    },
+  },
+}
+`;
+
+exports[`test awaitAll to cache 1`] = `Object {}`;
+
+exports[`test impl for createFetcher 1`] = `
+Object {
+  "action": Object {
+    "test": Object {
+      "": Object {
+        "data": 123,
       },
     },
   },

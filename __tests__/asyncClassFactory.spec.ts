@@ -1,7 +1,10 @@
 import * as React from 'react';
-import { asyncClassFactory, createFetcher, Fetcher } from '../index';
+import { asyncClassFactory,  } from '../index';
+import { create, Fetcher } from '../src/fetcher';
 import { renderToString } from 'react-dom/server'
-import { createApi, IApi } from './helpers';
+import { createApi } from './helpers';
+
+const createFetcher = create();
 
 @asyncClassFactory({
     renderLoader: 'loader',
@@ -19,14 +22,14 @@ class Test extends React.Component<{ fetcher: Fetcher<string>}, {}> {
 
 it('render loading', () => {
     const api = createApi<string>();
-    const fetcher = createFetcher(api.fetch);
+    const fetcher = createFetcher<string>(api.fetch);
     const component = renderToString(React.createElement(Test, { fetcher }))
     expect(component).toMatchSnapshot();
 });
 
 it('render error', async () => {
     const api = createApi<string>();
-    const fetcher = createFetcher(api.fetch);
+    const fetcher = createFetcher<string>(api.fetch);
     api.reject(new Error('custom error'));
     try {
         fetcher.get();
@@ -41,7 +44,7 @@ it('render error', async () => {
 
 it('render data', async () => {
     const api = createApi<string>();
-    const fetcher = createFetcher(api.fetch);
+    const fetcher = createFetcher<string>(api.fetch);
     api.resolve('content');
     try {
         fetcher.get();
