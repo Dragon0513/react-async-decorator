@@ -1,7 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`render data 1`] = `"<div data-reactroot=\\"\\"><div>content</div></div>"`;
+exports[`render data 1`] = `"<div><div>content</div></div>"`;
 
 exports[`render error 1`] = `"<div data-reactroot=\\"\\"><div>custom error</div></div>"`;
 
 exports[`render loading 1`] = `"<div data-reactroot=\\"\\"><div>loading</div></div>"`;
+
+exports[`render multiple components data 1`] = `"<div><div>content</div></div>"`;
+
+exports[`render multiple components data 2`] = `"<div><div>content</div></div>"`;
+
+exports[`render multiple components data 3`] = `"<div><div>content</div></div>"`;
