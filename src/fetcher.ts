@@ -7,42 +7,77 @@ function notImpl() {
   return TSyncPromise.reject(msg);
 }
 
-export interface FetcherFn<T> {
-  <T>(): T;
-  <T, A1>(a1: A1): T;
-  <T, A1, A2>(a1: A1, a2: A2): T;
-  <T, A1, A2, A3>(a1: A1, a2: A2, a3: A3): T;
-  <T, A1, A2, A3, A4>(a1: A1, a2: A2, a3: A3, a4: A4): T;
-  <T, A1, A2, A3, A4, A5>(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5): T;
-  <T, A1, A2, A3, A4, A5, A6>(
-    a1: A1,
-    a2: A2,
-    a3: A3,
-    a4: A4,
-    a5: A5,
-    a6: A6
-  ): T;
-  <T, A1, A2, A3, A4, A5, A6, A7>(
-    a1: A1,
-    a2: A2,
-    a3: A3,
-    a4: A4,
-    a5: A5,
-    a6: A6,
-    a7: A7
-  ): T;
+
+export type AnyResul<T> = T | Promise<T> | TSyncPromise<T> | Promise<T>[] | TSyncPromise<T>[];
+
+export interface IFetcherBase<T> {
+  clear(): void;
+  init(key: string, args: any[]): void;
+  await(): TSyncPromise<T>
+  awaitAll(): TSyncPromise<T[]>
 }
 
+export type IFetcherFn0<T> = () => AnyResul<T>;
+export interface IFetcher0<T> extends IFetcherBase<T> {
+  impl(load: () => AnyResul<T>): void;
+  asyncGet(): TSyncPromise<T>;
+  get(): T
+}
+
+export type IFetcherFn1<T, A1> = (a1: A1) => AnyResul<T>;
+export interface IFetcher1<T, A1> extends IFetcherBase<T> {
+  impl(load: IFetcherFn1<T, A1>): void;
+  asyncGet(a1: A1): TSyncPromise<T>;
+  get(a1: A1): T
+}
+
+export type IFetcherFn2<T, A1, A2> = (a1: A1, a2: A2) => AnyResul<T>;
+export interface IFetcher2<T, A1, A2> extends IFetcherBase<T> {
+  impl(load: IFetcherFn2<T, A1, A2>): void;
+  asyncGet(a1: A1, a2: A2): TSyncPromise<T>;
+  get(a1: A1, a2: A2): T
+}
+
+export type IFetcherFn3<T, A1, A2, A3> = (a1: A1, a2: A2, a3: A3) => AnyResul<T>;
+export interface IFetcher3<T, A1, A2, A3> extends IFetcherBase<T> {
+  impl(load: IFetcherFn3<T, A1, A2, A3>): void;
+  asyncGet(a1: A1, a2: A2, a3: A3): TSyncPromise<T>;
+  get(a1: A1, a2: A2, a3: A3): T
+}
+
+export type IFetcherFn4<T, A1, A2, A3, A4> = (a1: A1, a2: A2, a3: A3, a4: A4) => AnyResul<T>;
+export interface IFetcher4<T, A1, A2, A3, A4> extends IFetcherBase<T> {
+  impl(load: IFetcherFn4<T, A1, A2, A3, A4>): void;
+  asyncGet(a1: A1, a2: A2, a3: A3, a4: A4): TSyncPromise<T>;
+  get(a1: A1, a2: A2, a3: A3, a4: A4): T
+}
+
+export type IFetcherFn5<T, A1, A2, A3, A4, A5> = (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5) => AnyResul<T>;
+export interface IFetcher5<T, A1, A2, A3, A4, A5> extends IFetcherBase<T> {
+  impl(load: IFetcherFn5<T, A1, A2, A3, A4, A5>): void;
+  asyncGet(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5): TSyncPromise<T>;
+  get(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5): T
+}
+
+export type IFetcherFn6<T, A1, A2, A3, A4, A5, A6> = (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6) => AnyResul<T>;
+export interface IFetcher6<T, A1, A2, A3, A4, A5, A6> extends IFetcherBase<T> {
+  impl(load: IFetcherFn6<T, A1, A2, A3, A4, A5, A6>): void;
+  asyncGet(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6): TSyncPromise<T>;
+  get(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6): T
+}
+
+
 export class Fetcher<T> {
-  private load: FetcherFn<T>;
+  private load: (...args: any[]) => AnyResul<T>;
   private holder: Holder<T>;
 
-  constructor(opts: IOption<T>, load?: FetcherFn<T>) {
+  constructor(opts: IOption<T>, load?: (...args: any[]) => AnyResul<T>) {
     this.holder = new Holder<T>(opts);
-    this.impl(load || notImpl);
+    const impl = load || notImpl;
+    this.impl(impl as any);
   }
 
-  impl(load: FetcherFn<T>): void {
+  impl(load: (...args: any[]) => AnyResul<T>): void {
     this.load = load;
     this.holder.clear();
   }
@@ -51,7 +86,7 @@ export class Fetcher<T> {
     return this.holder.clear();
   }
 
-  init(key: string, args: any[]) {
+  init(key: string, args: any[]): void {
     if (!this.holder.has(key) && !this.holder.getAwait(key)) {
       const defer = this.load.apply(null, args);
       const syncDefer = Array.isArray(defer)
@@ -71,13 +106,13 @@ export class Fetcher<T> {
     return this.holder.await(key);
   }
 
-  asyncGet(...args: any[]) {
+  asyncGet(...args: any[]): TSyncPromise<T> {
     const key = args.length ? JSON.stringify(args) : '';
     this.init(key, args);
     return this.holder.await(key);
   }
 
-  get(...args: any[]) {
+  get(...args: any[]): T {
     const key = args.length ? JSON.stringify(args) : '';
     this.init(key, args);
     const error = this.holder.error(key);
@@ -118,11 +153,41 @@ export function create(opts?: ICreateOption) {
   const key = opts ? opts.key : 'local';
   const ptrStore = opts ? undefined : createMemoryStore('action', 'local');
   const store = opts ? opts.store : () => ptrStore!;
-  return function createFetcher<T>(load?: FetcherFn<T>, name?: string) {
+
+  function createFetcher<T>(
+    load?: IFetcherFn0<AnyResul<T>>,
+    name?: string
+  ): IFetcher0<T>;
+  function createFetcher<T, A1>(
+    load?: IFetcherFn1<AnyResul<T>, A1>,
+    name?: string
+  ): IFetcher1<T, A1>;
+  function createFetcher<T, A1, A2>(
+    load?: IFetcherFn2<AnyResul<T>, A1, A2>,
+    name?: string
+  ): IFetcher2<T, A1, A2>;
+  function createFetcher<T, A1, A2, A3>(
+    load?: IFetcherFn3<AnyResul<T>, A1, A2, A3>,
+    name?: string
+  ): IFetcher3<T, A1, A2, A3>;
+  function createFetcher<T, A1, A2, A3, A4>(
+    load?: IFetcherFn4<AnyResul<T>, A1, A2, A3, A4>,
+    name?: string
+  ): IFetcher4<T, A1, A2, A3, A4>;
+  function createFetcher<T, A1, A2, A3, A4, A5>(
+    load?: IFetcherFn5<AnyResul<T>, A1, A2, A3, A4, A5>,
+    name?: string
+  ): IFetcher5<T, A1, A2, A3, A4, A5>;
+  function createFetcher<T, A1, A2, A3, A4, A5, A6>(
+    load?: IFetcherFn6<AnyResul<T>, A1, A2, A3, A4, A5, A6>,
+    name?: string
+  ): IFetcher6<T, A1, A2, A3, A4, A5, A6>;
+  function createFetcher<T>(load?: (...args: any[]) => AnyResul<T>, name?: string): Fetcher<T> {
     const pname = name === undefined || name === null ? '' + counter++ : name;
     return new Fetcher<T>(
       { store: store as any, action, key, name: pname },
       load
     );
   };
+  return createFetcher;
 }
