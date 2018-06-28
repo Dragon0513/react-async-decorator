@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Holder::(set, clear) 1`] = `
+Array [
+  Object {
+    "action": "set",
+    "key": "success",
+    "name": "test",
+    "type": "action",
+    "value": 1,
+  },
+  Object {
+    "action": "error",
+    "error": [Error: error],
+    "key": "error",
+    "name": "test",
+    "type": "action",
+  },
+  Object {
+    "action": "clear",
+    "name": "test",
+    "type": "action",
+  },
+]
+`;
