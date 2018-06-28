@@ -5,7 +5,7 @@ export class Holder<T> {
   private container: Partial<Record<string, TSyncPromise<T>>> = {};
   static notExist = TSyncPromise.reject<any>(new Error("Doesn't exist"));
 
-  constructor(private props: IOption<T>) {}
+  constructor(private props: IOption) {}
 
   set(key: string, defer: TSyncPromise<T>) {
     const { store, name, action } = this.props;

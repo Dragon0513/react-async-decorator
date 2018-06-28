@@ -71,7 +71,7 @@ export class Fetcher<T> {
   private load: (...args: any[]) => AnyResul<T>;
   private holder: Holder<T>;
 
-  constructor(opts: IOption<T>, load?: (...args: any[]) => AnyResul<T>) {
+  constructor(opts: IOption, load?: (...args: any[]) => AnyResul<T>) {
     this.holder = new Holder<T>(opts);
     const impl = load || notImpl;
     this.impl(impl as any);
@@ -147,47 +147,51 @@ function createMemoryStore(action: string, key: string): MiddlewareAPI {
   return ret;
 }
 
-export function create(opts?: ICreateOption) {
+export function typeFetcherFn<T>(
+  load?: IFetcherFn0<AnyResul<T>>,
+  name?: string
+): IFetcher0<T>;
+export function typeFetcherFn<T, A1>(
+  load?: IFetcherFn1<AnyResul<T>, A1>,
+  name?: string
+): IFetcher1<T, A1>;
+export function typeFetcherFn<T, A1, A2>(
+  load?: IFetcherFn2<AnyResul<T>, A1, A2>,
+  name?: string
+): IFetcher2<T, A1, A2>;
+export function typeFetcherFn<T, A1, A2, A3>(
+  load?: IFetcherFn3<AnyResul<T>, A1, A2, A3>,
+  name?: string
+): IFetcher3<T, A1, A2, A3>;
+export function typeFetcherFn<T, A1, A2, A3, A4>(
+  load?: IFetcherFn4<AnyResul<T>, A1, A2, A3, A4>,
+  name?: string
+): IFetcher4<T, A1, A2, A3, A4>;
+export function typeFetcherFn<T, A1, A2, A3, A4, A5>(
+  load?: IFetcherFn5<AnyResul<T>, A1, A2, A3, A4, A5>,
+  name?: string
+): IFetcher5<T, A1, A2, A3, A4, A5>;
+export function typeFetcherFn<T, A1, A2, A3, A4, A5, A6>(
+  load?: IFetcherFn6<AnyResul<T>, A1, A2, A3, A4, A5, A6>,
+  name?: string
+): IFetcher6<T, A1, A2, A3, A4, A5, A6>;
+export function typeFetcherFn<T>(load?: (...args: any[]) => AnyResul<T>, name?: string): Fetcher<T> {
+  return null as any;
+}
+
+export function create(opts?: ICreateOption): typeof typeFetcherFn {
   let counter = 0;
   const action = opts ? opts.action : 'action';
   const key = opts ? opts.key : 'local';
   const ptrStore = opts ? undefined : createMemoryStore('action', 'local');
   const store = opts ? opts.store : () => ptrStore!;
 
-  function createFetcher<T>(
-    load?: IFetcherFn0<AnyResul<T>>,
-    name?: string
-  ): IFetcher0<T>;
-  function createFetcher<T, A1>(
-    load?: IFetcherFn1<AnyResul<T>, A1>,
-    name?: string
-  ): IFetcher1<T, A1>;
-  function createFetcher<T, A1, A2>(
-    load?: IFetcherFn2<AnyResul<T>, A1, A2>,
-    name?: string
-  ): IFetcher2<T, A1, A2>;
-  function createFetcher<T, A1, A2, A3>(
-    load?: IFetcherFn3<AnyResul<T>, A1, A2, A3>,
-    name?: string
-  ): IFetcher3<T, A1, A2, A3>;
-  function createFetcher<T, A1, A2, A3, A4>(
-    load?: IFetcherFn4<AnyResul<T>, A1, A2, A3, A4>,
-    name?: string
-  ): IFetcher4<T, A1, A2, A3, A4>;
-  function createFetcher<T, A1, A2, A3, A4, A5>(
-    load?: IFetcherFn5<AnyResul<T>, A1, A2, A3, A4, A5>,
-    name?: string
-  ): IFetcher5<T, A1, A2, A3, A4, A5>;
-  function createFetcher<T, A1, A2, A3, A4, A5, A6>(
-    load?: IFetcherFn6<AnyResul<T>, A1, A2, A3, A4, A5, A6>,
-    name?: string
-  ): IFetcher6<T, A1, A2, A3, A4, A5, A6>;
-  function createFetcher<T>(load?: (...args: any[]) => AnyResul<T>, name?: string): Fetcher<T> {
+  function createFetcherImpl<T>(load?: (...args: any[]) => AnyResul<T>, name?: string): Fetcher<T> {
     const pname = name === undefined || name === null ? '' + counter++ : name;
     return new Fetcher<T>(
       { store: store as any, action, key, name: pname },
       load
     );
   };
-  return createFetcher;
+  return createFetcherImpl as any;
 }

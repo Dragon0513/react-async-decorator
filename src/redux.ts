@@ -1,6 +1,6 @@
-import { create } from './fetcher';
-import { MiddlewareAPI, IActionFetch } from './interfaces';
-
+import { create, typeFetcherFn } from './fetcher';
+import { MiddlewareAPI, IActionFetch, Dispatch, FetcherState, IDataItem } from './interfaces';
+export { IDataItem };
 export function createReducer<State>(ACTION: string, KEY: string) {
   return function(state: State, act: IActionFetch) {
     if (act.type === ACTION) {
@@ -51,12 +51,12 @@ export function initRedux() {
 
     const reducer = createReducer(ACTION, KEY);
 
-    var createFetcher = create({
+    const fn = create({
       store: getApi as any, // TODO: fix maybe
       key: KEY,
       action: ACTION
-    });
-    return { use, reducer, createFetcher };
+    }) as any;
+    return { use, reducer, createFetcher: fn as typeof typeFetcherFn };
   }
   return createReduxFetcher;
 }
