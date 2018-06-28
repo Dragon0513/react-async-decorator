@@ -47,6 +47,8 @@ export class TSyncPromise<T> implements Promise<T> {
   static resolve<O>(data: O | PromiseLike<O>): TSyncPromise<O> {
     if (data instanceof Promise) {
       return new TSyncPromise<O>((resolve, reject) => data.then(resolve, reject))
+    } else if (data && data.toString && data.toString() === 'TSyncPromise') {
+      return data as any;
     } else {
       const p = new TSyncPromise<O>(null as any);
       p.data = { type: 'resolved', data: data as any };
@@ -118,8 +120,8 @@ export class TSyncPromise<T> implements Promise<T> {
   }
 
   public then<TResult1 = T, TResult2 = never>(
-    onfulfilled?: (value: T) => TResult1 | PromiseLike<TResult1>,
-    onrejected?: (reason: any) => TResult2 | PromiseLike<TResult2>
+    onfulfilled?: null | ((value: T) => TResult1 | PromiseLike<TResult1>),
+    onrejected?: null | ((reason: any) => TResult2 | PromiseLike<TResult2>)
   ): TSyncPromise<TResult1 | TResult2> {
     const d = this.data;
     if (d) {
