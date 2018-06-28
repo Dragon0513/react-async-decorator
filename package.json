@@ -12,7 +12,8 @@
     "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish"
   },
   "files": [
-    "lib"
+    "lib",
+    "index.d.ts"
   ],
   "license": "MIT",
   "private": false,
