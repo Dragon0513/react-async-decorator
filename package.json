@@ -11,6 +11,9 @@
     "compile": "rm -rf ./lib && tsc",
     "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish"
   },
+  "files":[
+    "lib"
+  ],
   "license": "MIT",
   "private": false,
   "devDependencies": {
