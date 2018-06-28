@@ -1,6 +1,6 @@
 {
   "name": "react-async-decorator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "typings": "index.d.ts",
   "repository": "git@github.com:lexich/react-async-decorator.git",
@@ -11,7 +11,7 @@
     "compile": "rm -rf ./lib && tsc",
     "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish"
   },
-  "files":[
+  "files": [
     "lib"
   ],
   "license": "MIT",
