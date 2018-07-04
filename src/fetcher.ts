@@ -133,7 +133,7 @@ export interface ICreateOption {
 }
 
 function createMemoryStore(action: string, key: string): MiddlewareAPI {
-  const reducer = createReducer(action, key);
+  const reducer = createReducer({ action, key });
   let state: any = { [key]: {} };
   const ret: MiddlewareAPI = {
     getState() {
@@ -179,17 +179,24 @@ export function typeFetcherFn<T>(load?: (...args: any[]) => AnyResul<T>, name?: 
   return null as any;
 }
 
+export interface IFetcherOption {
+  name?: string;
+}
+
 export function create(opts?: ICreateOption): typeof typeFetcherFn {
   let counter = 0;
+  function getName(option?: string | IFetcherOption): string {
+    return (option === undefined || option === null) ? ('' + counter++) :
+        typeof option === 'string' ? option : getName(option.name);
+  }
   const action = opts ? opts.action : 'action';
   const key = opts ? opts.key : 'local';
   const ptrStore = opts ? undefined : createMemoryStore('action', 'local');
   const store = opts ? opts.store : () => ptrStore!;
 
-  function createFetcherImpl<T>(load?: (...args: any[]) => AnyResul<T>, name?: string): Fetcher<T> {
-    const pname = name === undefined || name === null ? '' + counter++ : name;
+  function createFetcherImpl<T>(load?: (...args: any[]) => AnyResul<T>, option?: string | IFetcherOption): Fetcher<T> {
     return new Fetcher<T>(
-      { store: store as any, action, key, name: pname },
+      { store: store as any, action, key, name: getName(option) },
       load
     );
   };

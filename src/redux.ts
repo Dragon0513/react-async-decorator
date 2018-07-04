@@ -1,8 +1,23 @@
 import { create, typeFetcherFn } from './fetcher';
 import { MiddlewareAPI, IActionFetch, Dispatch, FetcherState, IDataItem } from './interfaces';
 export { IDataItem };
-export function createReducer<State>(ACTION: string, KEY: string) {
-  return function(state: State, act: IActionFetch) {
+
+
+export interface IOptionStore {
+  action: string;
+  key: string;
+}
+
+export type TReducer<State> = (state: State, action: IActionFetch) => State;
+
+export interface IOptionReducer<State> extends IOptionStore {
+  middleware?(state: State, action: IActionFetch, reducer: TReducer<State>): State;
+}
+
+export function createReducer<State>(opt: IOptionReducer<State>) {
+  const KEY = opt.key;
+  const ACTION = opt.action;
+  function reducer(state: State, act: IActionFetch): State {
     if (act.type === ACTION) {
       const nstate = Object.assign({}, state);
       if (act.action === 'clear') {
@@ -26,11 +41,18 @@ export function createReducer<State>(ACTION: string, KEY: string) {
       return nstate;
     }
     return state;
-  };
+  }
+  if (opt.middleware) {
+    return function(state: State, act: IActionFetch): State {
+      return opt.middleware(state, act, reducer);
+    }
+  } else {
+    return reducer;
+  }
 }
 
-export function initRedux() {
-  function createReduxFetcher(ACTION: string, KEY: string) {
+export function initRedux<State>() {
+  function createReduxFetcher(opt: IOptionStore) {
     let api: MiddlewareAPI;
 
     function use(aApi: MiddlewareAPI) {
@@ -49,12 +71,11 @@ export function initRedux() {
       return api;
     }
 
-    const reducer = createReducer(ACTION, KEY);
+    const reducer = createReducer<State>(opt);
 
     const fn = create({
+      ...opt,
       store: getApi as any, // TODO: fix maybe
-      key: KEY,
-      action: ACTION
     }) as any;
     return { use, reducer, createFetcher: fn as typeof typeFetcherFn };
   }

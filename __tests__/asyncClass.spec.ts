@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { asyncClass } from '../index';
-import { Fetcher, create } from '../src/fetcher';
+import { IFetcher0, create } from '../src/fetcher';
 
 import { renderToString } from 'react-dom/server';
-import { createApi, IApi } from './helpers';
+import { createApi } from './helpers';
 
 const createFetcher = create();
 @asyncClass
-class Test extends React.Component<{ fetcher: Fetcher<string> }, {}> {
+class Test extends React.Component<{ fetcher: IFetcher0<string> }, {}> {
   render() {
     const data = this.props.fetcher.get();
     return React.createElement('div', {}, data);
