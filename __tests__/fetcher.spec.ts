@@ -36,21 +36,40 @@ test('fetcher asyncGet', async () => {
   expect(data).toEqual(true);
 });
 
-test('fetcher impl', async () => {
+test('fetcher asyncSet', async () => {
+  type DeleteT = { type: 'delete' };
+  type UpdateT = { type: 'update', name: string };
+  const fetcher = createFetcher<DeleteT | UpdateT, { name: string }>(() => Promise.resolve({ name: 'lexich' }));
+  fetcher.implModify((opts) => {
+    if (opts.type === 'delete') {
+      return Promise.resolve({ name: '' });
+    } else if (opts.type === 'update') {
+      return Promise.resolve({ name: opts.name });
+   } else {
+      return Promise.reject(new Error('Unsupport operation'));
+    }
+  });
+
+  const info = await fetcher.asyncGet();
+  expect(info).toEqual({ name: 'lexich' });
+  const info2 = await fetcher.asyncSet({ type: 'delete' });
+  expect(info2).toEqual({ name: '' });
+  const info3 = await fetcher.asyncSet({ type: 'update', name: 'user' });
+  expect(info3).toEqual({ name: 'user' });
+});
+
+test('fetcher impl', () => {
   const obj = { id: 1 };
   const api = createApi<typeof obj>();
-  const fetcher = createFetcher<typeof obj>();
-  try {
-    await fetcher.asyncGet();
-    expect(false).toBeTruthy();
-  } catch (err) {
-    expect(err.message).toEqual("Fetcher wasn't implemented");
-  }
+  const fetcher = createFetcher<any, typeof obj>();
+  const msg = fetcher.asyncGet().catch(err => err.message);
+  expect(msg.data).toEqual({"data": "Fetcher wasn't implemented", "type": "resolved"});
+  fetcher.clear();
   fetcher.impl(api.fetch);
-
   api.resolve(obj);
-  const data = await fetcher.asyncGet();
-  expect(data).toBe(obj);
+  return fetcher.asyncGet().then(data => {
+    expect(data).toEqual(obj);
+  }, err => { throw err; });
 });
 
 test('fetcher with args', async () => {
@@ -58,7 +77,7 @@ test('fetcher with args', async () => {
   const api = createApi<typeof obj>();
   let pId = 0;
   let pArg = '';
-  const fetcher = createFetcher<typeof obj, number, string>((id, arg) => {
+  const fetcher = createFetcher<any, typeof obj, number, string>((id, arg) => {
     pId = id;
     pArg = arg;
     return api.fetch();

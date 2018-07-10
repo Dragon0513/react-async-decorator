@@ -1,5 +1,5 @@
 import { create, typeFetcherFn } from './fetcher';
-import { MiddlewareAPI, IActionFetch, Dispatch, FetcherState, IDataItem } from './interfaces';
+import { MiddlewareAPI, IActionFetch, IDataItem } from './interfaces';
 export { IDataItem };
 
 

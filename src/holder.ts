@@ -11,7 +11,7 @@ export class Holder<T> {
     const { store, name, action } = this.props;
     defer.then(
       value =>
-        store().dispatch({
+        this.allow(key, defer) && store().dispatch({
           type: action,
           action: 'set',
           name,
@@ -19,7 +19,7 @@ export class Holder<T> {
           value
         }),
       error =>
-        store().dispatch({
+        this.allow(key, defer) && store().dispatch({
           type: action,
           action: 'error',
           name,
@@ -28,6 +28,10 @@ export class Holder<T> {
         })
     );
     this.container[key] = defer;
+  }
+
+  allow(key: string, defer: TSyncPromise<T>): boolean {
+    return this.container[key] === defer;
   }
 
   clear(): void {

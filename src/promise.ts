@@ -151,8 +151,12 @@ export class TSyncPromise<T> implements Promise<T> {
   }
   public catch<TResult = never>(
     onrejected?: (reason: any) => TResult | PromiseLike<TResult>
-  ): Promise<T | TResult> {
+  ): TSyncPromise<T | TResult> {
     return this.then(undefined, onrejected);
+  }
+
+  public finally<TResult>(onCb?:() => TResult): TSyncPromise<TResult> {
+    return this.then(onCb, onCb);
   }
 
   public toPromise() {
