@@ -55,7 +55,9 @@ test('fetcher asyncSet', async () => {
 	const info2 = await fetcher.asyncSet({ type: 'delete' });
 	expect(info2).toEqual({ name: '' });
 	const info3 = await fetcher.asyncSet({ type: 'update', name: 'user' });
-	expect(info3).toEqual({ name: 'user' });
+  expect(info3).toEqual({ name: 'user' });
+  const data = fetcher.get();
+  expect(data).toBe(info3);
 });
 
 test('fetcher impl', () => {
