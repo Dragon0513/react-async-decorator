@@ -30,14 +30,26 @@ export interface IActionFetchSet extends Action {
   value: any;
 }
 
+export interface IActionFetchRequest extends Action {
+  name: string;
+  action: 'request';
+  key: string;
+}
+
 export type IActionFetch =
   | IActionFetchClear
   | IActionFetchSet
+  | IActionFetchRequest
   | IActionFetchError;
 
 export interface IDataItem {
   data?: any;
-  error?: Error;
+  error?: {
+    name: string;
+    message: string;
+    stack: string;
+  };
+  loading?: boolean;
 }
 
 export type FetcherItem = Partial<Record<string, IDataItem>>;

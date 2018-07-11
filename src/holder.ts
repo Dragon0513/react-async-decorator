@@ -9,6 +9,7 @@ export class Holder<T> {
 
   set(key: string, defer: TSyncPromise<T>) {
     const { store, name, action } = this.props;
+    store().dispatch({ type: action, action: 'request', name, key });
     defer.then(
       value =>
         this.allow(key, defer) && store().dispatch({
@@ -65,12 +66,19 @@ export class Holder<T> {
 
   has(key: string): boolean {
     const blob = this.getDataBlob(key);
-    return !!blob;
+    return blob ? (blob.loading === true ? false : true) : false;
   }
 
   error(key: string): Error | undefined {
     const blob = this.getDataBlob(key);
-    return blob ? blob.error : undefined;
+    const error = blob ? blob.error : undefined;
+    if (error) {
+      const err = new Error();
+      err.message = error.message;
+      err.stack = error.stack;
+      err.name = error.name;
+      return err;
+    }
   }
 
   getAwait(key: string): TSyncPromise<T> | undefined {

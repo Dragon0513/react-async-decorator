@@ -6,6 +6,7 @@ Object {
     "0": Object {
       "": Object {
         "data": 123,
+        "loading": false,
       },
     },
   },

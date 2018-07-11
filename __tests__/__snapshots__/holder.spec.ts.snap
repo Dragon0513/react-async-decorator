@@ -3,6 +3,18 @@
 exports[`Holder::(set, clear) 1`] = `
 Array [
   Object {
+    "action": "request",
+    "key": "success",
+    "name": "test",
+    "type": "action",
+  },
+  Object {
+    "action": "request",
+    "key": "error",
+    "name": "test",
+    "type": "action",
+  },
+  Object {
     "action": "clear",
     "name": "test",
     "type": "action",

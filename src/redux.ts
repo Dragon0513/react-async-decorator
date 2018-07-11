@@ -24,18 +24,22 @@ export function createReducer<State>(opt: IOptionReducer<State>) {
         if (nstate[KEY]) {
           nstate[KEY][act.name] = {};
         }
-      } else if (act.action === 'set' || act.action === 'error') {
+      } else if (act.action === 'set' || act.action === 'error' || act.action === 'request') {
         const { name, key } = act;
         const data = (nstate[KEY] = Object.assign({}, nstate[KEY]));
         const ptr = (data[name] = Object.assign({}, data[name]));
-        if (act.action === 'set') {
-          ptr[key] = { data: act.value };
+        if (act.action === 'request') {
+          ptr[key] = { ...ptr[key], loading: true };
+        } else if (act.action === 'set') {
+          ptr[key] = { data: act.value, loading: false };
         } else if (act.action === 'error') {
-          let error = act.error;
+          const { error } = act;
           if (error instanceof Error) {
-            error = { name: error.name, message: error.message, stack: error.stack };
+            const err = { name: error.name, message: error.message, stack: error.stack };
+            ptr[key] = { error: err, loading: false };
+          } else {
+            ptr[key] = { error: { name: 'custom error', message: error, stack: '' }, loading: false };
           }
-          ptr[key] = { error };
         }
       }
       return nstate;

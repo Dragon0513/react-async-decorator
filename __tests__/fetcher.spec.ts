@@ -1,5 +1,5 @@
 import { create } from '../src/fetcher';
-import { TSyncPromise } from '../src/promise'
+import { TSyncPromise } from '../src/promise';
 import { createApi } from './helpers';
 const createFetcher = create();
 
@@ -38,14 +38,16 @@ test('fetcher asyncGet', async () => {
 
 test('fetcher asyncSet', async () => {
   type DeleteT = { type: 'delete' };
-  type UpdateT = { type: 'update', name: string };
-  const fetcher = createFetcher<DeleteT | UpdateT, { name: string }>(() => Promise.resolve({ name: 'lexich' }));
-  fetcher.implModify((opts) => {
+  type UpdateT = { type: 'update'; name: string };
+  const fetcher = createFetcher<DeleteT | UpdateT, { name: string }>(() =>
+    Promise.resolve({ name: 'lexich' })
+  );
+  fetcher.implModify(opts => {
     if (opts.type === 'delete') {
       return Promise.resolve({ name: '' });
     } else if (opts.type === 'update') {
       return Promise.resolve({ name: opts.name });
-   } else {
+    } else {
       return Promise.reject(new Error('Unsupport operation'));
     }
   });
@@ -63,17 +65,25 @@ test('fetcher impl', () => {
   const api = createApi<typeof obj>();
   const fetcher = createFetcher<any, typeof obj>();
   const msg = fetcher.asyncGet().catch(err => err.message);
-  expect(msg.data).toEqual({"data": "Fetcher wasn't implemented", "type": "resolved"});
+  expect(msg.data).toEqual({
+    data: "Fetcher wasn't implemented",
+    type: 'resolved'
+  });
   fetcher.clear();
   fetcher.impl(api.fetch);
   api.resolve(obj);
-  return fetcher.asyncGet().then(data => {
-    expect(data).toEqual(obj);
-  }, err => { throw err; });
+  return fetcher.asyncGet().then(
+    data => {
+      expect(data).toEqual(obj);
+    },
+    err => {
+      throw err;
+    }
+  );
 });
 
 test('fetcher with args', async () => {
-  const obj = { id: 1};
+  const obj = { id: 1 };
   const api = createApi<typeof obj>();
   let pId = 0;
   let pArg = '';
@@ -85,6 +95,6 @@ test('fetcher with args', async () => {
   api.resolve(obj);
   const data = await fetcher.asyncGet(1, 'hello');
   expect(pId).toEqual(1);
-  expect(pArg).toEqual('hello')
+  expect(pArg).toEqual('hello');
   expect(data).toEqual({ id: 1 });
 });
