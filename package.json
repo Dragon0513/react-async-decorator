@@ -9,7 +9,8 @@
   "scripts": {
     "test": "npm run compile && jest",
     "compile": "rm -rf ./lib && tsc",
-    "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish"
+    "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish",
+    "prettier": "prettier --write \"{src,__tests__}/**/*.{ts,tsx}\""
   },
   "files": [
     "lib",
@@ -25,6 +26,7 @@
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "jest": "^22.4.3",
+    "prettier": "^1.13.7",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "redux": "^4.0.0",
