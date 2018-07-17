@@ -19,7 +19,8 @@ export interface IFetcherBase<SetOptions, T> {
 	await(): TSyncPromise<T>;
 	awaitAll(): TSyncPromise<T[]>;
 	asyncSet(opts: SetOptions): TSyncPromise<T>;
-	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
+  implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
+  isLoading(): boolean;
 }
 
 export type IFetcherFn0<T> = () => T;
@@ -119,7 +120,11 @@ export class Fetcher<SetOptions, T> {
 
 			this.holder.set(key, syncDefer);
 		}
-	}
+  }
+
+  isLoading(): boolean {
+    return this.holder.isLoading(this.keyPersist);
+  }
 
 	awaitAll(): TSyncPromise<T[]> {
 		return this.holder.awaitAll();

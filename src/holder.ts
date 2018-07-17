@@ -69,7 +69,12 @@ export class Holder<T> {
 	has(key: string): boolean {
 		const blob = this.getDataBlob(key);
 		return blob ? (blob.loading === true ? false : true) : false;
-	}
+  }
+
+  isLoading(key: string): boolean | undefined {
+    const blob = this.getDataBlob(key);
+    return blob ? blob.loading : undefined;
+  }
 
 	error(key: string): Error | undefined {
 		const blob = this.getDataBlob(key);
