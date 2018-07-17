@@ -19,7 +19,7 @@ export interface IFetcherBase<SetOptions, T> {
 	await(): TSyncPromise<T>;
 	awaitAll(): TSyncPromise<T[]>;
 	asyncSet(opts: SetOptions): TSyncPromise<T>;
-	implModify(modify: (opt: SetOptions) => AnyResult<T>): void;
+	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
 }
 
 export type IFetcherFn0<T> = () => T;
@@ -95,7 +95,7 @@ export class Fetcher<SetOptions, T> {
 		this.load = load;
 	}
 
-	implModify(modify: (opt: SetOptions) => AnyResult<T>): void {
+	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void {
 		this.modify = modify;
 	}
 
@@ -163,9 +163,10 @@ export class Fetcher<SetOptions, T> {
 
 	asyncSet(opt: SetOptions): TSyncPromise<T> {
 		const newDefer = this.modify(opt);
-		const syncDefer = (Array.isArray(newDefer)
-			? TSyncPromise.all(newDefer)
-			: TSyncPromise.resolve(newDefer)) as TSyncPromise<T>;
+		const syncDefer =
+			newDefer === undefined
+				? TSyncPromise.reject<T>('unsupported')
+				: ((Array.isArray(newDefer) ? TSyncPromise.all(newDefer) : TSyncPromise.resolve(newDefer)) as TSyncPromise<T>);
 		this.holder.set(this.keyPersist, syncDefer);
 		return syncDefer;
 	}
