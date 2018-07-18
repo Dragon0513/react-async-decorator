@@ -7,7 +7,8 @@
   "author": "Efremov Alexey <lexich121@gmail.com>",
   "description": "Decorators for support async react rendering",
   "scripts": {
-    "test": "jest",
+    "test": "npm run compile && npm run jest",
+    "jest": "jest __tests__",
     "compile": "rm -rf ./lib && tsc",
     "release": "npm test && standard-version && git push --follow-tags origin master --no-verify && npm publish",
     "prettier": "prettier --write \"{src,__tests__}/**/*.{ts,tsx}\""
