@@ -7,7 +7,7 @@ import { createApi } from './helpers';
 
 const createFetcher = create();
 @asyncClass
-class Test extends React.Component<{ fetcher: IFetcher0<string> }, {}> {
+class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
 	render() {
 		const data = this.props.fetcher.get();
 		return React.createElement('div', {}, data);
@@ -22,14 +22,14 @@ class Test extends React.Component<{ fetcher: IFetcher0<string> }, {}> {
 
 it('render loading', () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<string>(api.fetch);
+	const fetcher = createFetcher<never, string>(api.fetch);
 	const component = renderToString(React.createElement(Test, { fetcher }));
 	expect(component).toMatchSnapshot();
 });
 
 it('render error', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<string>(api.fetch);
+	const fetcher = createFetcher<never, string>(api.fetch);
 	api.reject(new Error('custom error'));
 	try {
 		fetcher.get();
@@ -37,14 +37,15 @@ it('render error', async () => {
 	} catch (e) {
 		expect(true).toBeTruthy();
 	}
-	await api.defer.catch(_ => 1);
+	const catchData = await fetcher.asyncGet().catch(_ => 1);
+	expect(1).toBe(catchData);
 	const component = renderToString(React.createElement(Test, { fetcher }));
 	expect(component).toMatchSnapshot();
 });
 
 it('render data', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<string>(api.fetch);
+	const fetcher = createFetcher<never, string>(api.fetch);
 	api.resolve('content');
 	try {
 		fetcher.get();

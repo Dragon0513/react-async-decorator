@@ -28,7 +28,7 @@ function wrapRender(render, renderLoader, renderError) {
     try {
       return render.apply(this, arguments);
     } catch (e) {
-      if (e instanceof Promise || (e.toString && e.toString() === 'TSyncPromise')) {
+      if (e instanceof Promise || (e && e.toString && e.toString() === 'TSyncPromise')) {
         if (catchDefer !== e) {
           catchDefer = e;
           var ctx = this;

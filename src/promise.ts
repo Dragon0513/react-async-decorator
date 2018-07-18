@@ -1,4 +1,6 @@
-export type TCallback<T> = (resolve: (data: T) => void, reject: (err: Error) => void) => void;
+export type TCallbackSuccess<T> = (data: T) => any;
+export type TCallbackError = (err: Error) => any;
+export type TCallback<T> = (resolve: TCallbackSuccess<T>, reject: TCallbackError) => void;
 
 interface IData<Type, T> {
 	type: Type;
@@ -31,8 +33,6 @@ export class Iterator<T extends ArrayLike<any>> {
 
 export class TSyncPromise<T> implements Promise<T> {
 	public data?: IData<'resolved', T> | IData<'rejected', any>;
-	private onfulfilled?: Array<(value: T) => any>;
-	private onrejected?: Array<(err: any) => any>;
 
 	[Symbol.toStringTag]: 'Promise';
 
@@ -99,16 +99,21 @@ export class TSyncPromise<T> implements Promise<T> {
 		}
 	}
 
+	private onApply: Array<(err: Error, data: T) => void>;
+
 	private setData(type: 'resolved' | 'rejected', data: any) {
 		if (!this.data) {
-			this.data = { type, data } as any;
-			if (type === 'resolved' && this.onfulfilled) {
-				this.onfulfilled.forEach(cb => cb(data));
-			} else if (type === 'rejected' && this.onrejected) {
-				this.onrejected.forEach(cb => cb(data));
+			if (data instanceof Promise || (data && data.toString() === 'TSyncPromise')) {
+				data.then(data => this.setData('resolved', data), err => this.setData('rejected', err));
+			} else {
+				this.data = { type, data } as any;
+				if (this.onApply) {
+					this.onApply.forEach(cb => {
+						cb(type === 'rejected' ? data : undefined, type === 'resolved' ? data : undefined);
+					});
+					this.onApply = undefined;
+				}
 			}
-			this.onfulfilled = undefined;
-			this.onrejected = undefined;
 		}
 	}
 
@@ -128,18 +133,25 @@ export class TSyncPromise<T> implements Promise<T> {
 				return this as any;
 			}
 		} else {
-			const fulfilled = this.onfulfilled || (this.onfulfilled = []);
-			const rejected = this.onrejected || (this.onrejected = []);
-			return new TSyncPromise<TResult1 | TResult2>((resolve, reject) => {
-				fulfilled.push(resolve as any);
-				rejected.push(reject);
-				if (onfulfilled) {
-					fulfilled.push(onfulfilled);
-				}
-				if (onrejected) {
-					rejected.push(onrejected);
-				}
-			});
+			const buf = this.onApply || (this.onApply = []);
+			return new TSyncPromise<TResult1 | TResult2>((resolve, reject) =>
+				buf.push(_ => {
+					const d = this.data;
+					if (d.type === 'resolved') {
+						const p: any = onfulfilled ? onfulfilled(d.data) : d.data;
+						resolve(p as any);
+					} else if (d.type === 'rejected') {
+						if (onrejected) {
+							const p: any = onrejected(d.data);
+							resolve(p);
+						} else {
+							reject(d.data);
+						}
+					} else {
+						reject(new Error('unexpected error'));
+					}
+				})
+			);
 		}
 	}
 	public catch<TResult = never>(

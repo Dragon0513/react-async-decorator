@@ -87,3 +87,30 @@ test('TSyncPromise then with TSyncPromise rejected', () => {
 	);
 	expect(defer.data).toEqual({ data: 1, type: 'resolved' });
 });
+
+test('TSyncPromise catch 1', async () => {
+	const err = new Error('error');
+	const defer = TSyncPromise.reject(err);
+	const data = await defer.catch(_ => 1);
+	expect(data).toBe(1);
+});
+
+test('TSyncPromise catch 2', async () => {
+	const err = new Error('error');
+	const defer = TSyncPromise.resolve(Promise.reject(err));
+	const data = await defer.catch(_ => 1);
+	expect(data).toBe(1);
+});
+
+test('TSyncPromise promise in promise 1', async () => {
+	const data = await TSyncPromise.resolve(TSyncPromise.resolve(1));
+	expect(1).toBe(data);
+});
+
+test('TSyncPromise promise in promise 1', async () => {
+	const defer = new TSyncPromise(resolve => {
+		resolve(Promise.resolve(2));
+	});
+	const data = await defer;
+	expect(2).toBe(data);
+});

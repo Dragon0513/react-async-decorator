@@ -60,5 +60,5 @@ export interface IOption {
 	name: string;
 	action: string; // action for redux
 	key: string; // key in store
-	store(): MiddlewareAPI;
+	store: MiddlewareAPI;
 }

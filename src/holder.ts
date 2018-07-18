@@ -9,11 +9,11 @@ export class Holder<T> {
 
 	set(key: string, defer: TSyncPromise<T>) {
 		const { store, name, action } = this.props;
-		store().dispatch({ type: action, action: 'request', name, key });
+		store.dispatch({ type: action, action: 'request', name, key });
 		defer.then(
 			value =>
 				this.allow(key, defer) &&
-				store().dispatch({
+				store.dispatch({
 					type: action,
 					action: 'set',
 					name,
@@ -22,7 +22,7 @@ export class Holder<T> {
 				}),
 			error =>
 				this.allow(key, defer) &&
-				store().dispatch({
+				store.dispatch({
 					type: action,
 					action: 'error',
 					name,
@@ -39,14 +39,13 @@ export class Holder<T> {
 
 	clear(): void {
 		const { store, action, name } = this.props;
-		store().dispatch({ type: action, action: 'clear', name });
+		store.dispatch({ type: action, action: 'clear', name });
 		this.container = {};
 	}
 
 	private getDataBlob(aKey: string): IDataItem | undefined {
 		const { store, key, name } = this.props;
-		const storeInstance = store();
-		const state = storeInstance.getState();
+		const state = store.getState();
 		if (!state) {
 			return;
 		}
@@ -69,12 +68,12 @@ export class Holder<T> {
 	has(key: string): boolean {
 		const blob = this.getDataBlob(key);
 		return blob ? (blob.loading === true ? false : true) : false;
-  }
+	}
 
-  isLoading(key: string): boolean | undefined {
-    const blob = this.getDataBlob(key);
-    return blob ? blob.loading : undefined;
-  }
+	isLoading(key: string): boolean | undefined {
+		const blob = this.getDataBlob(key);
+		return blob ? blob.loading : undefined;
+	}
 
 	error(key: string): Error | undefined {
 		const blob = this.getDataBlob(key);

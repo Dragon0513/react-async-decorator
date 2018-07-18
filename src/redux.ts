@@ -8,14 +8,33 @@ export interface IOptionStore {
 }
 
 export type TReducer<State> = (state: State, action: IActionFetch) => State;
-
-export interface IOptionReducer<State> extends IOptionStore {
+export interface IOptionReducer$<State> {
 	middleware?(state: State, action: IActionFetch, reducer: TReducer<State>): State;
+	setItem?(action: IActionFetch): Record<string, any> | undefined;
+}
+
+export type IOptionReducer<State> = IOptionStore & IOptionReducer$<State>;
+
+function setItemDefault(act: IActionFetch): Record<string, any> | undefined | null {
+	if (act.action === 'set') {
+		return { [act.key]: { data: act.value } };
+	} else if (act.action === 'error') {
+		const { error } = act;
+		if (error instanceof Error) {
+			const err = { name: error.name, message: error.message, stack: error.stack };
+			return { [act.key]: { error: err } };
+		} else {
+			return { [act.key]: { error: { name: 'custom error', message: error, stack: '' } } };
+		}
+	} else {
+		return undefined;
+	}
 }
 
 export function createReducer<State>(opt: IOptionReducer<State>) {
 	const KEY = opt.key;
 	const ACTION = opt.action;
+	const setItem = opt.setItem || setItemDefault;
 	function reducer(state: State, act: IActionFetch): State {
 		if (act.type === ACTION) {
 			const nstate = Object.assign({}, state);
@@ -29,15 +48,17 @@ export function createReducer<State>(opt: IOptionReducer<State>) {
 				const ptr = (data[name] = Object.assign({}, data[name]));
 				if (act.action === 'request') {
 					ptr[key] = { ...ptr[key], loading: true };
-				} else if (act.action === 'set') {
-					ptr[key] = { data: act.value, loading: false };
-				} else if (act.action === 'error') {
-					const { error } = act;
-					if (error instanceof Error) {
-						const err = { name: error.name, message: error.message, stack: error.stack };
-						ptr[key] = { error: err, loading: false };
-					} else {
-						ptr[key] = { error: { name: 'custom error', message: error, stack: '' }, loading: false };
+				} else if (act.action === 'set' || act.action === 'error') {
+					let dataHash = setItem(act);
+					if (dataHash === undefined || dataHash === null) {
+						if (setItem !== setItemDefault) {
+							dataHash = setItemDefault(act);
+						}
+					}
+					if (dataHash) {
+						Object.keys(dataHash).forEach(key => {
+							ptr[key] = { ...dataHash[key], loading: false };
+						});
 					}
 				}
 			}
@@ -58,28 +79,21 @@ export function initRedux<State>() {
 	function createReduxFetcher(opt: IOptionStore) {
 		let api: MiddlewareAPI;
 
-		function use(aApi: MiddlewareAPI) {
+		function use(aApi: MiddlewareAPI): void {
 			api = aApi;
-			return function(next: any) {
-				return function(action: any) {
-					return next(action);
-				};
-			};
 		}
 
-		function getApi(): MiddlewareAPI {
-			if (!api) {
-				throw new Error('add middleware to redux');
-			}
-			return api;
-		}
-
+		const store: MiddlewareAPI = {
+			getState() {
+				return api.getState();
+			},
+			dispatch(action: any) {
+				return api.dispatch(action);
+			},
+		};
 		const reducer = createReducer<State>(opt);
 
-		const fn = create({
-			...opt,
-			store: getApi as any, // TODO: fix maybe
-		}) as any;
+		const fn = create({ ...opt, store }) as any;
 		return { use, reducer, createFetcher: fn as typeof typeFetcherFn };
 	}
 	return createReduxFetcher;

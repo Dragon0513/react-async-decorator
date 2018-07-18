@@ -1,7 +1,7 @@
 import { IOption, MiddlewareAPI, FetcherState } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
-import { createReducer } from './redux';
+import { createReducer, IOptionReducer } from './redux';
 function notImpl() {
 	const msg = new Error("Fetcher wasn't implemented");
 	return TSyncPromise.reject(msg);
@@ -19,8 +19,8 @@ export interface IFetcherBase<SetOptions, T> {
 	await(): TSyncPromise<T>;
 	awaitAll(): TSyncPromise<T[]>;
 	asyncSet(opts: SetOptions): TSyncPromise<T>;
-  implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
-  isLoading(): boolean;
+	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
+	isLoading(): boolean;
 }
 
 export type IFetcherFn0<T> = () => T;
@@ -120,11 +120,11 @@ export class Fetcher<SetOptions, T> {
 
 			this.holder.set(key, syncDefer);
 		}
-  }
+	}
 
-  isLoading(): boolean {
-    return this.holder.isLoading(this.keyPersist);
-  }
+	isLoading(): boolean {
+		return this.holder.isLoading(this.keyPersist);
+	}
 
 	awaitAll(): TSyncPromise<T[]> {
 		return this.holder.awaitAll();
@@ -177,14 +177,9 @@ export class Fetcher<SetOptions, T> {
 	}
 }
 
-export interface ICreateOption {
-	store: MiddlewareAPI;
-	action: string;
-	key: string;
-}
-
-function createMemoryStore(action: string, key: string): MiddlewareAPI {
-	const reducer = createReducer({ action, key });
+function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
+	const { key } = opt;
+	const reducer = createReducer(opt);
 	let state: any = { [key]: {} };
 	const ret: MiddlewareAPI = {
 		getState() {
@@ -233,6 +228,12 @@ export interface IFetcherOption {
 
 export type TFetcherFn<T> = IFetcherFunction<T> | ((...args: any[]) => AnyResult<T>);
 
+export interface ICreateOption {
+	store: MiddlewareAPI;
+	action: string;
+	key: string;
+}
+
 export function create(opts?: ICreateOption): typeof typeFetcherFn {
 	let counter = 0;
 	function getName(option?: string | IFetcherOption): string {
@@ -244,15 +245,31 @@ export function create(opts?: ICreateOption): typeof typeFetcherFn {
 	}
 	const action = opts ? opts.action : 'action';
 	const key = opts ? opts.key : 'local';
-	const ptrStore = opts ? undefined : createMemoryStore('action', 'local');
-	const store = opts ? opts.store : () => ptrStore!;
+
+	const ptrStore = opts
+		? undefined
+		: createMemoryStore({
+				action: 'action',
+				key: 'local',
+		  });
+
+	const storeWrapper = {
+		getState() {
+			const store = opts ? opts.store : ptrStore!;
+			return store.getState();
+		},
+		dispatch(action: any) {
+			const store = opts ? opts.store : ptrStore!;
+			return store.dispatch(action);
+		},
+	};
 
 	function createFetcherImpl<T, SetOptions = any>(
 		fns?: TFetcherFn<T>,
 		option?: string | IFetcherOption
 	): Fetcher<SetOptions, T> {
 		return new Fetcher<SetOptions, T>(
-			{ store: store as any, action, key, name: getName(option) },
+			{ store: storeWrapper as any, action, key, name: getName(option) },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}

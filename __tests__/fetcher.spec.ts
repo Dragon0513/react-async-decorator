@@ -98,3 +98,18 @@ test('fetcher with args', async () => {
 	expect(pArg).toEqual('hello');
 	expect(data).toEqual({ id: 1 });
 });
+
+test('fetcher double get', async () => {
+	const api = createApi();
+	const fetcher = createFetcher(api.fetch);
+	try {
+		fetcher.get();
+		expect(false).toBeTruthy();
+	} catch (err) {
+		expect(true).toBeTruthy();
+	}
+	api.resolve('Hello world');
+	await fetcher.asyncGet();
+	const data = fetcher.get();
+	expect(data).toEqual('Hello world');
+});

@@ -1,4 +1,4 @@
-import { createStore, applyMiddleware, combineReducers, compose } from 'redux';
+import { createStore } from 'redux';
 import { IOptionStore, initRedux } from '../src/redux';
 
 const OPTIONS: IOptionStore = { action: 'ACTION', key: 'action' };
