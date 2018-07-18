@@ -1,82 +1,10 @@
-import { IOption, MiddlewareAPI, FetcherState } from './interfaces';
+import { IOption, MiddlewareAPI, FetcherState, AnyResult, IFetcherFunction, typeFetcherFn, IActionFetch } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
-import { createReducer, IOptionReducer } from './redux';
+import { IOptionReducer, createReducer } from './reduxReducer';
 function notImpl() {
 	const msg = new Error("Fetcher wasn't implemented");
 	return TSyncPromise.reject(msg);
-}
-
-export type AnyResult<T> = T | Promise<T> | TSyncPromise<T> | Promise<T>[] | TSyncPromise<T>[];
-
-export interface IFetcherFunction<T> {
-	load?(...args: any[]): AnyResult<T>;
-	modify?(...args: any[]): AnyResult<T>;
-}
-
-export interface IFetcherBase<SetOptions, T> {
-	clear(): void;
-	await(): TSyncPromise<T>;
-	awaitAll(): TSyncPromise<T[]>;
-	asyncSet(opts: SetOptions): TSyncPromise<T>;
-	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void;
-	isLoading(): boolean;
-}
-
-export type IFetcherFn0<T> = () => T;
-export interface IFetcher0<SetOptions, T> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn0<AnyResult<T>>): void;
-	asyncGet: IFetcherFn0<TSyncPromise<T>>;
-	get: IFetcherFn0<T>;
-	store(key: string): IFetcher0<SetOptions, T>;
-}
-
-export type IFetcherFn1<T, A1> = (a1: A1) => T;
-export interface IFetcher1<SetOptions, T, A1> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn1<AnyResult<T>, A1>): void;
-	asyncGet: IFetcherFn1<TSyncPromise<T>, A1>;
-	get: IFetcherFn1<T, A1>;
-	store(key: string): IFetcher1<SetOptions, T, A1>;
-}
-
-export type IFetcherFn2<T, A1, A2> = (a1: A1, a2: A2) => T;
-export interface IFetcher2<SetOptions, T, A1, A2> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn2<AnyResult<T>, A1, A2>): void;
-	asyncGet: IFetcherFn2<TSyncPromise<T>, A1, A2>;
-	get: IFetcherFn2<T, A1, A2>;
-	store(key: string): IFetcher2<SetOptions, T, A1, A2>;
-}
-
-export type IFetcherFn3<T, A1, A2, A3> = (a1: A1, a2: A2, a3: A3) => T;
-export interface IFetcher3<SetOptions, T, A1, A2, A3> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn3<AnyResult<T>, A1, A2, A3>): void;
-	asyncGet: IFetcherFn3<TSyncPromise<T>, A1, A2, A3>;
-	get: IFetcherFn3<T, A1, A2, A3>;
-	store(key: string): IFetcher3<SetOptions, T, A1, A2, A3>;
-}
-
-export type IFetcherFn4<T, A1, A2, A3, A4> = (a1: A1, a2: A2, a3: A3, a4: A4) => T;
-export interface IFetcher4<SetOptions, T, A1, A2, A3, A4> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn4<AnyResult<T>, A1, A2, A3, A4>): void;
-	asyncGet: IFetcherFn4<TSyncPromise<T>, A1, A2, A3, A4>;
-	get: IFetcherFn4<T, A1, A2, A3, A4>;
-	store(key: string): IFetcher4<SetOptions, T, A1, A2, A3, A4>;
-}
-
-export type IFetcherFn5<T, A1, A2, A3, A4, A5> = (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5) => T;
-export interface IFetcher5<SetOptions, T, A1, A2, A3, A4, A5> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn5<AnyResult<T>, A1, A2, A3, A4, A5>): void;
-	asyncGet: IFetcherFn5<TSyncPromise<T>, A1, A2, A3, A4, A5>;
-	get: IFetcherFn5<T, A1, A2, A3, A4, A5>;
-	store(key: string): IFetcher5<SetOptions, T, A1, A2, A3, A4, A5>;
-}
-
-export type IFetcherFn6<T, A1, A2, A3, A4, A5, A6> = (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6) => T;
-export interface IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6> extends IFetcherBase<SetOptions, T> {
-	impl(load: IFetcherFn6<AnyResult<T>, A1, A2, A3, A4, A5, A6>): void;
-	asyncGet: IFetcherFn6<TSyncPromise<T>, A1, A2, A3, A4, A5, A6>;
-	get: IFetcherFn6<T, A1, A2, A3, A4, A5, A6>;
-	store(key: string): IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6>;
 }
 
 export class Fetcher<SetOptions, T> {
@@ -193,43 +121,17 @@ function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
 	return ret;
 }
 
-export function typeFetcherFn<SetOptions, T>(load?: IFetcherFn0<AnyResult<T>>, name?: string): IFetcher0<SetOptions, T>;
-export function typeFetcherFn<SetOptions, T, A1>(
-	load?: IFetcherFn1<AnyResult<T>, A1>,
-	name?: string
-): IFetcher1<SetOptions, T, A1>;
-export function typeFetcherFn<SetOptions, T, A1, A2>(
-	load?: IFetcherFn2<AnyResult<T>, A1, A2>,
-	name?: string
-): IFetcher2<SetOptions, T, A1, A2>;
-export function typeFetcherFn<SetOptions, T, A1, A2, A3>(
-	load?: IFetcherFn3<AnyResult<T>, A1, A2, A3>,
-	name?: string
-): IFetcher3<SetOptions, T, A1, A2, A3>;
-export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4>(
-	load?: IFetcherFn4<AnyResult<T>, A1, A2, A3, A4>,
-	name?: string
-): IFetcher4<SetOptions, T, A1, A2, A3, A4>;
-export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4, A5>(
-	load?: IFetcherFn5<AnyResult<T>, A1, A2, A3, A4, A5>,
-	name?: string
-): IFetcher5<SetOptions, T, A1, A2, A3, A4, A5>;
-export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4, A5, A6>(
-	load?: IFetcherFn6<AnyResult<T>, A1, A2, A3, A4, A5, A6>,
-	name?: string
-): IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6>;
-export function typeFetcherFn<T>(load?: (...args: any[]) => AnyResult<T>, name?: string): Fetcher<any, T> {
-	return null as any;
-}
+
 
 export interface IFetcherOption {
-	name?: string;
+  name?: string;
+  setItem?(action: IActionFetch): Record<string, any> | undefined;
 }
 
 export type TFetcherFn<T> = IFetcherFunction<T> | ((...args: any[]) => AnyResult<T>);
 
 export interface ICreateOption {
-	store: MiddlewareAPI;
+	createStore: typeof createMemoryStore;
 	action: string;
 	key: string;
 }
@@ -242,34 +144,31 @@ export function create(opts?: ICreateOption): typeof typeFetcherFn {
 			: typeof option === 'string'
 				? option
 				: getName(option.name);
-	}
+  }
+  function getIterceptor(option?: string | IFetcherOption) {
+    return (option && typeof option !== 'string') ? option.setItem : undefined;
+  }
 	const action = opts ? opts.action : 'action';
 	const key = opts ? opts.key : 'local';
 
-	const ptrStore = opts
-		? undefined
-		: createMemoryStore({
-				action: 'action',
-				key: 'local',
-		  });
-
-	const storeWrapper = {
-		getState() {
-			const store = opts ? opts.store : ptrStore!;
-			return store.getState();
-		},
-		dispatch(action: any) {
-			const store = opts ? opts.store : ptrStore!;
-			return store.dispatch(action);
-		},
-	};
-
+  const createStore = (opts && opts.createStore) ? opts.createStore : createMemoryStore;
+  const setItemInterceptor: Partial<Record<string, typeof setItem>> = {};
+  function setItem(action: IActionFetch): Record<string, any> | undefined {
+    const iterceptor = setItemInterceptor[action.name];
+    return iterceptor ? iterceptor(action) : undefined;
+  }
+  const store = createStore({ action, key, setItem });
 	function createFetcherImpl<T, SetOptions = any>(
 		fns?: TFetcherFn<T>,
 		option?: string | IFetcherOption
 	): Fetcher<SetOptions, T> {
+    const interceptor = getIterceptor(option);
+    const name = getName(option);
+    if (interceptor) {
+      setItemInterceptor[name] = interceptor;
+    }
 		return new Fetcher<SetOptions, T>(
-			{ store: storeWrapper as any, action, key, name: getName(option) },
+			{ store, action, key, name },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}

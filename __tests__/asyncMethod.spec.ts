@@ -2,10 +2,11 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
 import { asyncMethod } from '../index';
-import { create, IFetcher0 } from '../src/fetcher';
+import { create } from '../src/fetcher';
 const createFetcher = create();
 import * as Enzyme from 'enzyme';
 import EnzymeAdapter from 'enzyme-adapter-react-16';
+import { IFetcher0 } from '../src/interfaces';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 

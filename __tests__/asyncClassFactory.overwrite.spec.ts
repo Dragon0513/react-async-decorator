@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { asyncClassFactory } from '../index';
-import { IFetcher0, create } from '../src/fetcher';
+import { create } from '../src/fetcher';
 import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
+import { IFetcher0 } from '../src/interfaces';
 
 const createFetcher = create();
 

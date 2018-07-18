@@ -1,5 +1,6 @@
 import { createStore } from 'redux';
-import { IOptionStore, initRedux } from '../src/redux';
+import { initRedux } from '../src/redux';
+import { IOptionStore } from '../src/reduxReducer';
 
 const OPTIONS: IOptionStore = { action: 'ACTION', key: 'action' };
 
@@ -15,7 +16,7 @@ test('empty initial state', async () => {
 		fetcher.get();
 	} catch (e) {}
 	await fetcher.awaitAll();
-	const state = store.getState();
+  const state = store.getState();
 	expect(state).toMatchSnapshot();
 });
 

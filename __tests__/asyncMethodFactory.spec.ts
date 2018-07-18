@@ -2,7 +2,8 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
 import { asyncMethodFactory } from '../index';
-import { create, Fetcher, IFetcher0 } from '../src/fetcher';
+import { create } from '../src/fetcher';
+import { IFetcher0 } from '../src/interfaces';
 const createFetcher = create();
 
 class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
