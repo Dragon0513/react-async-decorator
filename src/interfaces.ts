@@ -145,31 +145,35 @@ export interface IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6> extends IFetch
 	store(key: string): IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6>;
 }
 
+export interface IFetcherOption {
+  name?: string;
+  setItem?(action: IActionFetch): Record<string, any> | undefined;
+}
 
 export function typeFetcherFn<SetOptions, T>(load?: IFetcherFn0<AnyResult<T>>, name?: string): IFetcher0<SetOptions, T>;
 export function typeFetcherFn<SetOptions, T, A1>(
 	load?: IFetcherFn1<AnyResult<T>, A1>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher1<SetOptions, T, A1>;
 export function typeFetcherFn<SetOptions, T, A1, A2>(
 	load?: IFetcherFn2<AnyResult<T>, A1, A2>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher2<SetOptions, T, A1, A2>;
 export function typeFetcherFn<SetOptions, T, A1, A2, A3>(
 	load?: IFetcherFn3<AnyResult<T>, A1, A2, A3>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher3<SetOptions, T, A1, A2, A3>;
 export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4>(
 	load?: IFetcherFn4<AnyResult<T>, A1, A2, A3, A4>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher4<SetOptions, T, A1, A2, A3, A4>;
 export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4, A5>(
 	load?: IFetcherFn5<AnyResult<T>, A1, A2, A3, A4, A5>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher5<SetOptions, T, A1, A2, A3, A4, A5>;
 export function typeFetcherFn<SetOptions, T, A1, A2, A3, A4, A5, A6>(
 	load?: IFetcherFn6<AnyResult<T>, A1, A2, A3, A4, A5, A6>,
-	name?: string
+	name?: string | IFetcherOption
 ): IFetcher6<SetOptions, T, A1, A2, A3, A4, A5, A6>;
 export function typeFetcherFn<T>(load?: (...args: any[]) => AnyResult<T>, name?: string): IFetcherAny<T> {
 	return null as any;

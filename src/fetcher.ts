@@ -1,4 +1,4 @@
-import { IOption, MiddlewareAPI, FetcherState, AnyResult, IFetcherFunction, typeFetcherFn, IActionFetch } from './interfaces';
+import { IOption, MiddlewareAPI, IFetcherOption, AnyResult, IFetcherFunction, typeFetcherFn, IActionFetch } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
 import { IOptionReducer, createReducer } from './reduxReducer';
@@ -119,13 +119,6 @@ function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
 		},
 	};
 	return ret;
-}
-
-
-
-export interface IFetcherOption {
-  name?: string;
-  setItem?(action: IActionFetch): Record<string, any> | undefined;
 }
 
 export type TFetcherFn<T> = IFetcherFunction<T> | ((...args: any[]) => AnyResult<T>);
