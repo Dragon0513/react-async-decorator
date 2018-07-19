@@ -1,5 +1,5 @@
 import { create } from './fetcher';
-import { MiddlewareAPI, Dispatch, IDataItem, IActionFetch, typeFetcherFn } from './interfaces';
+import { MiddlewareAPI, Dispatch, IDataItem, IActionFetch } from './interfaces';
 import { IOptionStore, createReducer, IOptionReducer } from './reduxReducer';
 export { MiddlewareAPI, Dispatch, IDataItem, IActionFetch };
 
@@ -30,7 +30,7 @@ export function initRedux<State>() {
     }
 
 		const fn = create({ ...opt, createStore }) as any;
-		return { use, reducer, createFetcher: fn as typeof typeFetcherFn };
+		return { use, reducer, createFetcher: fn };
 	}
 	return createReduxFetcher;
 }

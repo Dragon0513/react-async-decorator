@@ -3,10 +3,10 @@ import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
 import { asyncMethodFactory } from '../index';
 import { create } from '../src/fetcher';
-import { IFetcher0 } from '../src/interfaces';
+import { IFetcher } from '../src/interfaces';
 const createFetcher = create();
 
-class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
+class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
 	render() {
 		return React.createElement('div', { className: 'test' }, this.renderComponent());
 	}
@@ -25,14 +25,14 @@ class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
 
 it('render loading', () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	const component = renderToString(React.createElement(Test, { fetcher }));
 	expect(component).toMatchSnapshot();
 });
 
 it('render error', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	api.reject(new Error('custom error'));
 	try {
 		fetcher.get();
@@ -47,7 +47,7 @@ it('render error', async () => {
 
 it('render data', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	api.resolve('content');
 	try {
 		fetcher.get();

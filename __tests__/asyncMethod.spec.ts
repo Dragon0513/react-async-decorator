@@ -6,11 +6,11 @@ import { create } from '../src/fetcher';
 const createFetcher = create();
 import * as Enzyme from 'enzyme';
 import EnzymeAdapter from 'enzyme-adapter-react-16';
-import { IFetcher0 } from '../src/interfaces';
+import { IFetcher } from '../src/interfaces';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 
-class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
+class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
 	render() {
 		return React.createElement('div', {}, this.renderComponent());
 	}
@@ -29,14 +29,14 @@ class Test extends React.Component<{ fetcher: IFetcher0<never, string> }, {}> {
 
 it('render loading', () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	const component = renderToString(React.createElement(Test, { fetcher }));
 	expect(component).toMatchSnapshot();
 });
 
 it('render error', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	api.reject(new Error('custom error'));
 	try {
 		fetcher.get();
@@ -51,7 +51,7 @@ it('render error', async () => {
 
 it('render data', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	const component = Enzyme.mount(React.createElement(Test, { fetcher }));
 	api.resolve('content');
 	await api.defer;
@@ -60,7 +60,7 @@ it('render data', async () => {
 
 it('render multiple components data', async () => {
 	const api = createApi<string>();
-	const fetcher = createFetcher<never, string>(api.fetch);
+	const fetcher = createFetcher<string>(api.fetch);
 	const components = [1, 2, 3].map(() => {
 		return Enzyme.mount(React.createElement(Test, { fetcher }));
 	});

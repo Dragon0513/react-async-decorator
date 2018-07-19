@@ -1,4 +1,4 @@
-import { IOption, MiddlewareAPI, IFetcherOption, AnyResult, IFetcherFunction, typeFetcherFn, IActionFetch } from './interfaces';
+import { IOption, MiddlewareAPI, IFetcherOption, AnyResult, IFetcherFunction, IFetcher, IActionFetch, IFetcherContext, IFetcherFnContext } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
 import { IOptionReducer, createReducer } from './reduxReducer';
@@ -7,24 +7,33 @@ function notImpl() {
 	return TSyncPromise.reject(msg);
 }
 
-export class Fetcher<SetOptions, T> {
-	private load: (...args: any[]) => AnyResult<T>;
-	private modify: (opt: SetOptions) => AnyResult<T>;
-	private holder: Holder<T>;
-	private mapper?: Partial<Record<string, Fetcher<SetOptions, T>>>;
-	private keyPersist: string = '';
+function hashArg<T>(arg?: T): string {
+  if (arg === null || arg === undefined) {
+    return '';
+  }
+  return JSON.stringify(arg);
+}
 
-	constructor(opts: IOption, fn: IFetcherFunction<T>) {
-		this.holder = new Holder<T>(opts);
+export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions> {
+  private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
+  private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
+
+  private hashArg: (opt?: GetOptions) => string;
+  private context: IFetcherContext = {};
+	private holder: Holder<T>;
+
+	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
+    this.holder = new Holder<T>(opts);
+    this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
 		this.impl(impl as any);
 	}
 
-	impl(load: (...args: any[]) => AnyResult<T>): void {
+	impl(load: (opt?: GetOptions) => AnyResult<T>): void {
 		this.load = load;
 	}
 
-	implModify(modify: (opt: SetOptions) => AnyResult<T> | undefined): void {
+	implModify(modify: IFetcherFnContext<SetOptions, AnyResult<T> | undefined>): void {
 		this.modify = modify;
 	}
 
@@ -32,7 +41,7 @@ export class Fetcher<SetOptions, T> {
 		return this.holder.clear();
 	}
 
-	init(key: string, args: any[]): void {
+	init(key: string, args?: GetOptions): void {
 		const load = this.load;
 		if (!load) {
 			return;
@@ -41,7 +50,7 @@ export class Fetcher<SetOptions, T> {
 			return;
 		}
 		if (!this.holder.getAwait(key)) {
-			const defer = load(...args);
+			const defer = load(this.context, args);
 			const syncDefer = (Array.isArray(defer) ? TSyncPromise.all(defer) : TSyncPromise.resolve(defer)) as TSyncPromise<
 				T
 			>;
@@ -50,39 +59,28 @@ export class Fetcher<SetOptions, T> {
 		}
 	}
 
-	isLoading(): boolean {
-		return this.holder.isLoading(this.keyPersist);
+	isLoading(arg?: GetOptions): boolean {
+    const key = this.hashArg(arg);
+		return this.holder.isLoading(key);
 	}
 
 	awaitAll(): TSyncPromise<T[]> {
 		return this.holder.awaitAll();
 	}
 
-	await(): TSyncPromise<T> {
-		const args = Array.prototype.slice.apply(arguments);
-		return this.holder.await(this.keyPersist);
+	await(arg?: GetOptions): TSyncPromise<T> {
+    const key = this.hashArg(arg);
+		return this.holder.await(key);
 	}
 
-	asyncGet(...args: any[]): TSyncPromise<T> {
-		this.init(this.keyPersist, args);
-		return this.holder.await(this.keyPersist);
+	asyncGet(args?: GetOptions): TSyncPromise<T> {
+    const key = this.hashArg(args);
+		this.init(key, args);
+		return this.holder.await(key);
 	}
 
-	store(key: string): Fetcher<SetOptions, T> {
-		const keyPersist = this.keyPersist || '';
-		const mapper = this.mapper || (this.mapper = { [keyPersist]: this });
-		if (mapper[key]) {
-			return mapper[key];
-		} else {
-			const copy: Fetcher<SetOptions, T> = Object.create(this);
-			copy.keyPersist = key;
-			mapper[key] = copy;
-			return copy;
-		}
-	}
-
-	get(...args: any[]): T {
-		const key = this.keyPersist;
+	get(args?: GetOptions): T {
+		const key = this.hashArg(args);
 		this.init(key, args);
 		const error = this.holder.error(key);
 		if (error !== undefined) {
@@ -94,13 +92,14 @@ export class Fetcher<SetOptions, T> {
 		return this.holder.get(key);
 	}
 
-	asyncSet(opt: SetOptions): TSyncPromise<T> {
-		const newDefer = this.modify(opt);
+	asyncSet(opt: SetOptions, arg?: GetOptions): TSyncPromise<T> {
+    const key = this.hashArg(arg);
+		const newDefer = this.modify(this.context, opt);
 		const syncDefer =
 			newDefer === undefined
 				? TSyncPromise.reject<T>('unsupported')
 				: ((Array.isArray(newDefer) ? TSyncPromise.all(newDefer) : TSyncPromise.resolve(newDefer)) as TSyncPromise<T>);
-		this.holder.set(this.keyPersist, syncDefer);
+		this.holder.set(key, syncDefer);
 		return syncDefer;
 	}
 }
@@ -121,7 +120,9 @@ function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
 	return ret;
 }
 
-export type TFetcherFn<T> = IFetcherFunction<T> | ((...args: any[]) => AnyResult<T>);
+export type TFetcherFn<T, GetOptions, SetOptions> =
+  IFetcherFunction<T, GetOptions, SetOptions> |
+  IFetcherFnContext<GetOptions, AnyResult<T>>;
 
 export interface ICreateOption {
 	createStore: typeof createMemoryStore;
@@ -129,7 +130,7 @@ export interface ICreateOption {
 	key: string;
 }
 
-export function create(opts?: ICreateOption): typeof typeFetcherFn {
+export function create(opts?: ICreateOption) {
 	let counter = 0;
 	function getName(option?: string | IFetcherOption): string {
 		return option === undefined || option === null
@@ -151,19 +152,19 @@ export function create(opts?: ICreateOption): typeof typeFetcherFn {
     return iterceptor ? iterceptor(action) : undefined;
   }
   const store = createStore({ action, key, setItem });
-	function createFetcherImpl<T, SetOptions = any>(
-		fns?: TFetcherFn<T>,
+	function createFetcherImpl<T, GetOptions = any, SetOptions = any>(
+		fns?: TFetcherFn<T, GetOptions, SetOptions>,
 		option?: string | IFetcherOption
-	): Fetcher<SetOptions, T> {
+	): Fetcher<T, GetOptions, SetOptions> {
     const interceptor = getIterceptor(option);
     const name = getName(option);
     if (interceptor) {
       setItemInterceptor[name] = interceptor;
     }
-		return new Fetcher<SetOptions, T>(
+		return new Fetcher<T, GetOptions, SetOptions>(
 			{ store, action, key, name },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}
-	return createFetcherImpl as any;
+	return createFetcherImpl;
 }

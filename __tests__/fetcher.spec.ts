@@ -39,8 +39,8 @@ test('fetcher asyncGet', async () => {
 test('fetcher asyncSet', async () => {
 	type DeleteT = { type: 'delete' };
 	type UpdateT = { type: 'update'; name: string };
-	const fetcher = createFetcher<DeleteT | UpdateT, { name: string }>(() => Promise.resolve({ name: 'lexich' }));
-	fetcher.implModify(opts => {
+	const fetcher = createFetcher<{ name: string }, any, DeleteT | UpdateT>(() => Promise.resolve({ name: 'lexich' }));
+	fetcher.implModify(((_, opts) => {
 		if (opts.type === 'delete') {
 			return Promise.resolve({ name: '' });
 		} else if (opts.type === 'update') {
@@ -48,7 +48,7 @@ test('fetcher asyncSet', async () => {
 		} else {
 			return Promise.reject(new Error('Unsupport operation'));
 		}
-	});
+	}));
 
 	const info = await fetcher.asyncGet();
 	expect(info).toEqual({ name: 'lexich' });
@@ -86,14 +86,15 @@ test('fetcher with args', async () => {
 	const obj = { id: 1 };
 	const api = createApi<typeof obj>();
 	let pId = 0;
-	let pArg = '';
-	const fetcher = createFetcher<any, typeof obj, number, string>((id, arg) => {
+  let pArg = '';
+
+	const fetcher = createFetcher<typeof obj, { id: number, arg: string}, never>((_, { id, arg}) => {
 		pId = id;
 		pArg = arg;
 		return api.fetch();
 	});
 	api.resolve(obj);
-	const data = await fetcher.asyncGet(1, 'hello');
+	const data = await fetcher.asyncGet({ id: 1, arg: 'hello' });
 	expect(pId).toEqual(1);
 	expect(pArg).toEqual('hello');
 	expect(data).toEqual({ id: 1 });
