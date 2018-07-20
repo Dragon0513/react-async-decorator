@@ -114,3 +114,10 @@ test('fetcher double get', async () => {
 	const data = fetcher.get();
 	expect(data).toEqual('Hello world');
 });
+
+test('', async () => {
+  type User = { id: number, name: string }
+  const fetcher = createFetcher<User, number>((ctx, ids) => {
+    return { id: 1, name: '' };
+  });
+});

@@ -19,17 +19,18 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
   private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
 
   private hashArg: (opt?: GetOptions) => string;
-  private context: IFetcherContext = {};
+  private context: IFetcherContext<T>;
 	private holder: Holder<T>;
 
 	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
-    this.holder = new Holder<T>(opts);
+    const holder = this.holder = new Holder<T>(opts);
     this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
-		this.impl(impl as any);
+    this.impl(impl as any);
+    this.context = { holder };
 	}
 
-	impl(load: (opt?: GetOptions) => AnyResult<T>): void {
+	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void {
 		this.load = load;
 	}
 

@@ -1,7 +1,7 @@
-import { IOption, IDataItem } from './interfaces';
+import { IOption, IDataItem, IHolder } from './interfaces';
 import { TSyncPromise } from './promise';
 
-export class Holder<T> {
+export class Holder<T> implements IHolder<T> {
 	private container: Partial<Record<string, TSyncPromise<T>>> = {};
 	static notExist = TSyncPromise.reject<any>(new Error("Doesn't exist"));
 
@@ -95,7 +95,7 @@ export class Holder<T> {
 		return this.getAwait(key) || Holder.notExist;
 	}
 
-	awaitAll() {
+	awaitAll(): TSyncPromise<T[]> {
 		const allDefers = Object.keys(this.container).map(key => this.container[key]);
 		return TSyncPromise.all<T>(allDefers);
 	}

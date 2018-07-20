@@ -68,8 +68,21 @@ export interface IOption {
 
 export type AnyResult<T> = T | Promise<T> | TSyncPromise<T> | Promise<T>[] | TSyncPromise<T>[];
 
-export interface IFetcherContext {
+export interface IHolder<T> {
+  set(key: string, defer: TSyncPromise<T>): void;
+  allow(key: string, defer: TSyncPromise<T>): boolean;
+  clear(): void;
+  get(key: string): T | undefined;
+  has(key: string): boolean;
+  isLoading(key: string): boolean | undefined;
+  error(key: string): Error | undefined;
+  getAwait(key: string): TSyncPromise<T> | undefined;
+  await(key: string): TSyncPromise<T>;
+  awaitAll(): TSyncPromise<T[]>;
+}
 
+export interface IFetcherContext<T> {
+  holder: IHolder<T>;
 }
 export interface IFetcherFunction<T, GetOptions, SetOptions> {
   load?: IFetcherFnContext<GetOptions, AnyResult<T>>;
@@ -86,7 +99,7 @@ export interface IFetcherBase<SetOptions, T> {
 }
 
 export type IFetcherFn<Opt, T> = (arg?: Opt) => T;
-export type IFetcherFnContext<Opt, T> = (ctx: IFetcherContext, arg?: Opt) => T;
+export type IFetcherFnContext<Opt, T> = (ctx: IFetcherContext<T>, arg?: Opt) => T;
 
 export interface IFetcher<T, GetOptions = any, SetOptions = any> extends IFetcherBase<SetOptions, T> {
 	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void;
