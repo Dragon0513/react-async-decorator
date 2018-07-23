@@ -1,5 +1,4 @@
-
-import {  IActionFetch } from './interfaces';
+import { IActionFetch } from './interfaces';
 
 export interface IOptionStore {
 	action: string;
@@ -16,15 +15,22 @@ export type IOptionReducer<State> = IOptionStore & IOptionReducer$<State>;
 
 function setItemDefault(act: IActionFetch): Record<string, any> | undefined | null {
 	if (act.action === 'set') {
-		return { [act.key]: { data: act.value } };
+		return Object.keys(act.payload).reduce((memo, key) => {
+			memo[key] = { data: act.payload[key] };
+			return memo;
+		}, {});
 	} else if (act.action === 'error') {
-		const { error } = act;
-		if (error instanceof Error) {
-			const err = { name: error.name, message: error.message, stack: error.stack };
-			return { [act.key]: { error: err } };
-		} else {
-			return { [act.key]: { error: { name: 'custom error', message: error, stack: '' } } };
-		}
+		const { payload } = act;
+		return Object.keys(payload).reduce((memo, key) => {
+			const error = payload[key];
+			if (error instanceof Error) {
+				const err = { name: error.name, message: error.message, stack: error.stack };
+				memo[key] = { error: err };
+			} else {
+				memo[key] = { error: { name: 'custom error', message: error, stack: '' } };
+			}
+			return memo;
+		}, {});
 	} else {
 		return undefined;
 	}
@@ -42,11 +48,15 @@ export function createReducer<State>(opt: IOptionReducer<State>) {
 					nstate[KEY][act.name] = {};
 				}
 			} else if (act.action === 'set' || act.action === 'error' || act.action === 'request') {
-				const { name, key } = act;
+				const { name } = act;
 				const data = (nstate[KEY] = Object.assign({}, nstate[KEY]));
 				const ptr = (data[name] = Object.assign({}, data[name]));
 				if (act.action === 'request') {
-					ptr[key] = { ...ptr[key], loading: true };
+					if (Array.isArray(act.keys)) {
+						act.keys.forEach(key => (ptr[key] = { ...ptr[key], loading: true }));
+					} else {
+						ptr[act.keys] = { ...ptr[act.keys], loading: true };
+					}
 				} else if (act.action === 'set' || act.action === 'error') {
 					let dataHash = setItem(act);
 					if (dataHash === undefined || dataHash === null) {

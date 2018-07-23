@@ -5,16 +5,16 @@ const createFetcher = create();
 
 test('fetcher test', async () => {
 	const api = createApi();
-	const fetcher = createFetcher(api.fetch);
+	const fetcher = createFetcher(() => api.fetch());
 	try {
 		fetcher.get();
 		expect(false).toBeTruthy();
 	} catch (e) {
 		expect(e).toBeInstanceOf(TSyncPromise);
 	}
-	const sendData = {};
+	const sendData = { msg: 'Hello' };
 	api.resolve(sendData);
-	await api.defer;
+	await fetcher.asyncGet();
 	expect(fetcher.get() === sendData).toBeTruthy();
 	fetcher.clear();
 	try {
@@ -40,7 +40,7 @@ test('fetcher asyncSet', async () => {
 	type DeleteT = { type: 'delete' };
 	type UpdateT = { type: 'update'; name: string };
 	const fetcher = createFetcher<{ name: string }, any, DeleteT | UpdateT>(() => Promise.resolve({ name: 'lexich' }));
-	fetcher.implModify(((_, opts) => {
+	fetcher.implModify(opts => {
 		if (opts.type === 'delete') {
 			return Promise.resolve({ name: '' });
 		} else if (opts.type === 'update') {
@@ -48,7 +48,7 @@ test('fetcher asyncSet', async () => {
 		} else {
 			return Promise.reject(new Error('Unsupport operation'));
 		}
-	}));
+	});
 
 	const info = await fetcher.asyncGet();
 	expect(info).toEqual({ name: 'lexich' });
@@ -86,9 +86,9 @@ test('fetcher with args', async () => {
 	const obj = { id: 1 };
 	const api = createApi<typeof obj>();
 	let pId = 0;
-  let pArg = '';
+	let pArg = '';
 
-	const fetcher = createFetcher<typeof obj, { id: number, arg: string}, never>((_, { id, arg}) => {
+	const fetcher = createFetcher<typeof obj, { id: number; arg: string }, never>(({ id, arg }) => {
 		pId = id;
 		pArg = arg;
 		return api.fetch();
@@ -115,9 +115,43 @@ test('fetcher double get', async () => {
 	expect(data).toEqual('Hello world');
 });
 
-test('', async () => {
-  type User = { id: number, name: string }
-  const fetcher = createFetcher<User, number>((ctx, ids) => {
-    return { id: 1, name: '' };
-  });
+test('manualStore with caching', async () => {
+	type User = { id: number; name: string };
+	let counter = 0;
+	const getUser = (id: number): Promise<User> => {
+		counter++;
+		return Promise.resolve({ id, name: `User ${id}` });
+	};
+
+	const fetcher = createFetcher<User[], number[], never>(
+		(ids, { holder, hash }) => {
+			const newIds = ids.filter(id => !holder.getAwait(hash(id)));
+			const props: Record<string, Promise<User>> = {};
+			const pUsers = newIds.map(id => {
+				const user = getUser(id);
+				props['' + id] = user;
+				return user;
+			});
+
+			holder.set(props as any);
+
+			return Promise.all(pUsers).then(() => {
+				const users = ids.map(id => {
+					const key = hash(id);
+					const user = (holder.get(key) as any) as User;
+					return user;
+				});
+				return users;
+			});
+		},
+		{ manualStore: true }
+	);
+
+	const user12 = await fetcher.asyncGet([1, 2]);
+	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]).toEqual(user12);
+	expect(counter).toBe(2);
+
+	const user23 = await fetcher.asyncGet([2, 3]);
+	expect([{ id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(user23);
+  expect(counter).toBe(3);
 });

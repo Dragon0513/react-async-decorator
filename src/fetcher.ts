@@ -1,4 +1,14 @@
-import { IOption, MiddlewareAPI, IFetcherOption, AnyResult, IFetcherFunction, IFetcher, IActionFetch, IFetcherContext, IFetcherFnContext } from './interfaces';
+import {
+	IOption,
+	MiddlewareAPI,
+	IFetcherOption,
+	AnyResult,
+	IFetcherFunction,
+	IFetcher,
+	IActionFetch,
+	IFetcherContext,
+	IFetcherFnContext,
+} from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
 import { IOptionReducer, createReducer } from './reduxReducer';
@@ -8,26 +18,26 @@ function notImpl() {
 }
 
 function hashArg<T>(arg?: T): string {
-  if (arg === null || arg === undefined) {
-    return '';
-  }
-  return JSON.stringify(arg);
+	if (arg === null || arg === undefined) {
+		return '';
+	}
+	return JSON.stringify(arg);
 }
 
 export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions> {
-  private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
-  private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
+	private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
+	private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
 
-  private hashArg: (opt?: GetOptions) => string;
-  private context: IFetcherContext<T>;
+	private hashArg: (opt?: GetOptions) => string;
+	private context: IFetcherContext<T>;
 	private holder: Holder<T>;
 
 	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
-    const holder = this.holder = new Holder<T>(opts);
-    this.hashArg = opts.hashArg || hashArg;
+		const holder = (this.holder = new Holder<T>(opts));
+		this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
-    this.impl(impl as any);
-    this.context = { holder };
+		this.impl(impl as any);
+		this.context = { holder, hash: this.hashArg };
 	}
 
 	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void {
@@ -44,24 +54,22 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 
 	init(key: string, args?: GetOptions): void {
 		const load = this.load;
-		if (!load) {
-			return;
-		}
+
 		if (this.holder.has(key)) {
 			return;
 		}
+
 		if (!this.holder.getAwait(key)) {
-			const defer = load(this.context, args);
+			const defer = load(args, this.context);
 			const syncDefer = (Array.isArray(defer) ? TSyncPromise.all(defer) : TSyncPromise.resolve(defer)) as TSyncPromise<
 				T
 			>;
-
 			this.holder.set(key, syncDefer);
 		}
 	}
 
 	isLoading(arg?: GetOptions): boolean {
-    const key = this.hashArg(arg);
+		const key = this.hashArg(arg);
 		return this.holder.isLoading(key);
 	}
 
@@ -70,12 +78,12 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 
 	await(arg?: GetOptions): TSyncPromise<T> {
-    const key = this.hashArg(arg);
+		const key = this.hashArg(arg);
 		return this.holder.await(key);
 	}
 
 	asyncGet(args?: GetOptions): TSyncPromise<T> {
-    const key = this.hashArg(args);
+		const key = this.hashArg(args);
 		this.init(key, args);
 		return this.holder.await(key);
 	}
@@ -94,8 +102,8 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 
 	asyncSet(opt: SetOptions, arg?: GetOptions): TSyncPromise<T> {
-    const key = this.hashArg(arg);
-		const newDefer = this.modify(this.context, opt);
+		const key = this.hashArg(arg);
+		const newDefer = this.modify(opt, this.context);
 		const syncDefer =
 			newDefer === undefined
 				? TSyncPromise.reject<T>('unsupported')
@@ -122,13 +130,17 @@ function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
 }
 
 export type TFetcherFn<T, GetOptions, SetOptions> =
-  IFetcherFunction<T, GetOptions, SetOptions> |
-  IFetcherFnContext<GetOptions, AnyResult<T>>;
+	| IFetcherFunction<T, GetOptions, SetOptions>
+	| IFetcherFnContext<GetOptions, AnyResult<T>>;
 
 export interface ICreateOption {
 	createStore: typeof createMemoryStore;
 	action: string;
 	key: string;
+}
+
+function getOption<T>(fn: ((opt: IFetcherOption) => T | undefined), option?: string | IFetcherOption): T | undefined {
+	return option && typeof option !== 'string' ? fn(option) : undefined;
 }
 
 export function create(opts?: ICreateOption) {
@@ -139,31 +151,30 @@ export function create(opts?: ICreateOption) {
 			: typeof option === 'string'
 				? option
 				: getName(option.name);
-  }
-  function getIterceptor(option?: string | IFetcherOption) {
-    return (option && typeof option !== 'string') ? option.setItem : undefined;
-  }
+	}
+
 	const action = opts ? opts.action : 'action';
 	const key = opts ? opts.key : 'local';
 
-  const createStore = (opts && opts.createStore) ? opts.createStore : createMemoryStore;
-  const setItemInterceptor: Partial<Record<string, typeof setItem>> = {};
-  function setItem(action: IActionFetch): Record<string, any> | undefined {
-    const iterceptor = setItemInterceptor[action.name];
-    return iterceptor ? iterceptor(action) : undefined;
-  }
-  const store = createStore({ action, key, setItem });
+	const createStore = opts && opts.createStore ? opts.createStore : createMemoryStore;
+	const setItemInterceptor: Partial<Record<string, typeof setItem>> = {};
+	function setItem(action: IActionFetch): Record<string, any> | undefined {
+		const iterceptor = setItemInterceptor[action.name];
+		return iterceptor ? iterceptor(action) : undefined;
+	}
+	const store = createStore({ action, key, setItem });
 	function createFetcherImpl<T, GetOptions = any, SetOptions = any>(
 		fns?: TFetcherFn<T, GetOptions, SetOptions>,
 		option?: string | IFetcherOption
 	): Fetcher<T, GetOptions, SetOptions> {
-    const interceptor = getIterceptor(option);
-    const name = getName(option);
-    if (interceptor) {
-      setItemInterceptor[name] = interceptor;
-    }
+		const interceptor = getOption(o => o.setItem, option);
+		const manual = !!getOption(o => o.manualStore, option);
+		const name = getName(option);
+		if (interceptor) {
+			setItemInterceptor[name] = interceptor;
+		}
 		return new Fetcher<T, GetOptions, SetOptions>(
-			{ store, action, key, name },
+			{ store, action, key, name, manual },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}

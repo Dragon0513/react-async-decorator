@@ -1,4 +1,12 @@
-import { IOption, IDataItem, IHolder } from './interfaces';
+import {
+	IOption,
+	IDataItem,
+	IHolder,
+	IActionFetchRequest,
+	IActionFetchSet,
+	IActionFetchError,
+	IActionFetch,
+} from './interfaces';
 import { TSyncPromise } from './promise';
 
 export class Holder<T> implements IHolder<T> {
@@ -7,30 +15,86 @@ export class Holder<T> implements IHolder<T> {
 
 	constructor(private props: IOption) {}
 
-	set(key: string, defer: TSyncPromise<T>) {
+	set(params: Record<string, TSyncPromise<T>>): void;
+	set(key: string, defer: TSyncPromise<T>): void;
+	set(aKey: any, aDefer?: any) {
 		const { store, name, action } = this.props;
-		store.dispatch({ type: action, action: 'request', name, key });
-		defer.then(
-			value =>
-				this.allow(key, defer) &&
-				store.dispatch({
-					type: action,
-					action: 'set',
-					name,
-					key,
-					value,
-				}),
-			error =>
-				this.allow(key, defer) &&
-				store.dispatch({
-					type: action,
-					action: 'error',
-					name,
-					key,
-					error,
-				})
-		);
-		this.container[key] = defer;
+		if (aDefer !== undefined) {
+			if (!this.props.manual) {
+				const act: IActionFetchRequest = { type: action, action: 'request', name, keys: aKey };
+				store.dispatch(act);
+				aDefer.then(
+					payload => {
+						if (!this.allow(aKey, aDefer)) {
+							return;
+						}
+						const act2: IActionFetchSet = {
+							type: action,
+							action: 'set',
+							name,
+							payload: { [aKey]: payload },
+						};
+						store.dispatch(act2);
+					},
+					error => {
+						if (!this.allow(aKey, aDefer)) {
+							return;
+						}
+						const act2: IActionFetchError = {
+							type: action,
+							action: 'error',
+							name,
+							payload: { [aKey]: error },
+						};
+						store.dispatch(act2);
+					}
+				);
+			}
+			this.container[aKey] = aDefer;
+		} else {
+			const keys = Object.keys(aKey);
+			const params: Record<string, TSyncPromise<T>> = aKey;
+			const act: IActionFetch = { type: action, action: 'request', name, keys };
+			store.dispatch(act);
+			const defers = keys.map(key => {
+				this.container[key] = params[key];
+				return params[key];
+			});
+			TSyncPromise.all<T>(defers).then(
+				payloads => {
+					const allowKeys = keys.filter(key => this.allow(key, params[key]));
+					const indexes = allowKeys.map(key => keys.indexOf(key));
+					const payload: Record<string, T> = {};
+					indexes.forEach(id => {
+						payload[keys[id]] = payloads[id];
+					});
+					if (indexes.length) {
+						const act2: IActionFetchSet = {
+							type: action,
+							action: 'set',
+							name,
+							payload,
+						};
+						store.dispatch(act2);
+					}
+				},
+				error => {
+					const allowKeys = keys.filter(key => this.allow(key, params[key]));
+					const indexes = allowKeys.map(key => keys.indexOf(key));
+					const payload: Record<string, Error> = {};
+					indexes.forEach(id => {
+						payload[keys[id]] = error;
+					});
+					const act2: IActionFetchError = {
+						type: action,
+						action: 'error',
+						name,
+						payload,
+					};
+					store.dispatch(act2);
+				}
+			);
+		}
 	}
 
 	allow(key: string, defer: TSyncPromise<T>): boolean {
@@ -45,6 +109,7 @@ export class Holder<T> implements IHolder<T> {
 
 	private getDataBlob(aKey: string): IDataItem | undefined {
 		const { store, key, name } = this.props;
+
 		const state = store.getState();
 		if (!state) {
 			return;
@@ -92,7 +157,8 @@ export class Holder<T> implements IHolder<T> {
 	}
 
 	await(key: string): TSyncPromise<T> {
-		return this.getAwait(key) || Holder.notExist;
+		const ret = this.getAwait(key);
+		return ret || Holder.notExist;
 	}
 
 	awaitAll(): TSyncPromise<T[]> {

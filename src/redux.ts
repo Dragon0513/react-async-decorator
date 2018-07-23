@@ -20,14 +20,14 @@ export function initRedux<State>() {
 			},
 		};
 
-    // reducer initialize after create call
-    let reducer: (state: State, act: IActionFetch) => State;
+		// reducer initialize after create call
+		let reducer: (state: State, act: IActionFetch) => State;
 
-    // it's sync callback which call after create call
-    function createStore(opt: IOptionReducer<any>): MiddlewareAPI {
-      reducer = createReducer<State>(opt);
-      return store;
-    }
+		// it's sync callback which call after create call
+		function createStore(opt: IOptionReducer<any>): MiddlewareAPI {
+			reducer = createReducer<State>(opt);
+			return store;
+		}
 
 		const fn = create({ ...opt, createStore }) as any;
 		return { use, reducer, createFetcher: fn };

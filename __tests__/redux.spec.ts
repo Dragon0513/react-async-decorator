@@ -16,7 +16,7 @@ test('empty initial state', async () => {
 		fetcher.get();
 	} catch (e) {}
 	await fetcher.awaitAll();
-  const state = store.getState();
+	const state = store.getState();
 	expect(state).toMatchSnapshot();
 });
 
