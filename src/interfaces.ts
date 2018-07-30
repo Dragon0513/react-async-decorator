@@ -110,5 +110,6 @@ export interface IFetcher<T, GetOptions = any, SetOptions = any> extends IFetche
 export interface IFetcherOption {
 	name?: string;
 	manualStore?: boolean;
-	setItem?(action: IActionFetch): Record<string, any> | undefined;
+  setItem?(action: IActionFetch): Record<string, any> | undefined;
+  hashArg?(arg?: any): string;
 }

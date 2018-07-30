@@ -30,14 +30,16 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 
 	private hashArg: (opt?: GetOptions) => string;
 	private context: IFetcherContext<T>;
-	private holder: Holder<T>;
+  private holder: Holder<T>;
+  private manual = false;
 
 	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
-		const holder = (this.holder = new Holder<T>(opts));
+    const holder = (this.holder = new Holder<T>(opts));
 		this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
 		this.impl(impl as any);
-		this.context = { holder, hash: this.hashArg };
+    this.context = { holder, hash: this.hashArg };
+    this.manual = opts.manual;
 	}
 
 	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void {
@@ -89,16 +91,27 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 
 	get(args?: GetOptions): T {
-		const key = this.hashArg(args);
-		this.init(key, args);
-		const error = this.holder.error(key);
-		if (error !== undefined) {
-			throw error;
-		}
-		if (!this.holder.has(key)) {
-			throw this.holder.await(key);
-		}
-		return this.holder.get(key);
+    if (this.manual) {
+      const r = this.asyncGet(args);
+      if (!r.data) {
+        throw r;
+      } else if (r.data.type === 'rejected') {
+        throw r.data.data;
+      } else {
+        return r.data.data;
+      }
+    } else {
+      const key = this.hashArg(args);
+      this.init(key, args);
+      const error = this.holder.error(key);
+      if (error !== undefined) {
+        throw error;
+      }
+      if (!this.holder.has(key)) {
+        throw this.holder.await(key);
+      }
+      return this.holder.get(key);
+    }
 	}
 
 	asyncSet(opt: SetOptions, arg?: GetOptions): TSyncPromise<T> {
@@ -168,13 +181,14 @@ export function create(opts?: ICreateOption) {
 		option?: string | IFetcherOption
 	): Fetcher<T, GetOptions, SetOptions> {
 		const interceptor = getOption(o => o.setItem, option);
-		const manual = !!getOption(o => o.manualStore, option);
+    const manual = !!getOption(o => o.manualStore, option);
+    const hashArgFn = getOption(o => o.hashArg, option);
 		const name = getName(option);
 		if (interceptor) {
 			setItemInterceptor[name] = interceptor;
 		}
 		return new Fetcher<T, GetOptions, SetOptions>(
-			{ store, action, key, name, manual },
+			{ store, action, key, name, manual, hashArg: hashArgFn },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}

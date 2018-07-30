@@ -135,7 +135,7 @@ test('manualStore with caching', async () => {
 
 			holder.set(props as any);
 
-			return Promise.all(pUsers).then(() => {
+			return TSyncPromise.all(pUsers).then(() => {
 				const users = ids.map(id => {
 					const key = hash(id);
 					const user = (holder.get(key) as any) as User;
@@ -153,5 +153,9 @@ test('manualStore with caching', async () => {
 
 	const user23 = await fetcher.asyncGet([2, 3]);
 	expect([{ id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(user23);
+  expect(counter).toBe(3);
+
+  const userSync = fetcher.get([1, 2, 3]);
+  expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(userSync);
   expect(counter).toBe(3);
 });
