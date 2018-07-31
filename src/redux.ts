@@ -1,7 +1,7 @@
-import { create } from './fetcher';
-import { MiddlewareAPI, Dispatch, IDataItem, IActionFetch } from './interfaces';
+import { create, Fetcher, TFetcherFn } from './fetcher';
+import { MiddlewareAPI, Dispatch, IDataItem, IActionFetch, IFetcherOption } from './interfaces';
 import { IOptionStore, createReducer, IOptionReducer } from './reduxReducer';
-export { MiddlewareAPI, Dispatch, IDataItem, IActionFetch };
+export { MiddlewareAPI, Dispatch, IDataItem, IActionFetch, Fetcher, TFetcherFn, IFetcherOption };
 
 export function initRedux<State>() {
 	function createReduxFetcher(opt: IOptionStore) {
@@ -29,7 +29,7 @@ export function initRedux<State>() {
 			return store;
 		}
 
-		const fn = create({ ...opt, createStore }) as any;
+		const fn = create({ ...opt, createStore });
 		return { use, reducer, createFetcher: fn };
 	}
 	return createReduxFetcher;
