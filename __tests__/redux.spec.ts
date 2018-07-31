@@ -5,8 +5,7 @@ import { IOptionStore } from '../src/reduxReducer';
 const OPTIONS: IOptionStore = { action: 'ACTION', key: 'action' };
 
 test('empty initial state', async () => {
-	const createReduxFetcher = initRedux();
-	const conf = createReduxFetcher(OPTIONS);
+	const conf = initRedux(OPTIONS);
 	const store = createStore(conf.reducer, {
 		action: {},
 	});
@@ -21,8 +20,7 @@ test('empty initial state', async () => {
 });
 
 test('predefined state shouldns overwrite', async () => {
-	const createReduxFetcher = initRedux();
-	const conf = createReduxFetcher(OPTIONS);
+	const conf = initRedux(OPTIONS);
 	const initialState = { action: { test: { '': { d: 999 } } } };
 	const store = createStore(conf.reducer, initialState);
 	conf.use(store as any);
@@ -36,8 +34,7 @@ test('predefined state shouldns overwrite', async () => {
 });
 
 test('test impl for createFetcher', async () => {
-	const createReduxFetcher = initRedux();
-	const conf = createReduxFetcher(OPTIONS);
+	const conf = initRedux(OPTIONS);
 	const initialState = { action: { test: { '': { d: 999 } } } };
 	const store = createStore(conf.reducer, initialState);
 	conf.use(store as any);
@@ -52,8 +49,7 @@ test('test impl for createFetcher', async () => {
 });
 
 test('test awaitAll to cache', async () => {
-	const createReduxFetcher = initRedux();
-	const conf = createReduxFetcher(OPTIONS);
+	const conf = initRedux(OPTIONS);
 	const store = createStore(conf.reducer, {});
 	conf.use(store as any);
 	const fetcher = conf.createFetcher(() => Promise.resolve(123), 'test');
