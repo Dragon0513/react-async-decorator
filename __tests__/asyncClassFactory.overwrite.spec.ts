@@ -12,7 +12,7 @@ const asyncClass = asyncClassFactory({
 	renderError: err => React.createElement('div', {}, err.message),
 });
 
-@asyncClass
+@asyncClass()
 class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
 	render() {
 		const data = this.props.fetcher.get();

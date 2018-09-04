@@ -10,7 +10,7 @@ const createFetcher = create();
 @asyncClassFactory({
 	renderLoader: 'loader',
 	renderError: err => React.createElement('div', {}, err.message),
-})
+})()
 class Test extends React.Component<{ fetcher: IFetcher0<string> }, {}> {
 	render() {
 		const data = this.props.fetcher.get();

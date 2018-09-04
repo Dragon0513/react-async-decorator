@@ -89,13 +89,18 @@ export interface IFetcherFunction<T, GetOptions, SetOptions> {
 	modify?: IFetcherFnContext<SetOptions, AnyResult<T>>;
 }
 
-export interface IFetcherBase<SetOptions, T> {
+export interface IUpdater {
+  addUpdater(fn: () => void, ctx?: any): void;
+  removeUpdater(fn: () => void, ctx?: any): void;
+}
+
+export interface IFetcherBase<SetOptions, T> extends IUpdater {
 	clear(): void;
 	await(): TSyncPromise<T>;
 	awaitAll(): TSyncPromise<T[]>;
 	asyncSet(opts: SetOptions): TSyncPromise<T>;
 	implModify(modify: IFetcherFnContext<SetOptions, AnyResult<T> | undefined>): void;
-	isLoading(): boolean;
+  isLoading(): boolean;
 }
 
 export type IFetcherFn<Opt, T> = (arg?: Opt) => T;

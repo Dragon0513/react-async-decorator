@@ -20,6 +20,8 @@ var __extends = (this && this.__extends) || (function () {
   };
 })();
 
+var libFetcher = require('./lib/fetcher')
+
 function wrapRender(render, renderLoader, renderError) {
   var catchDefer = null;
   var tLoader = typeof renderLoader;
@@ -50,47 +52,78 @@ function wrapRender(render, renderLoader, renderError) {
 }
 module.exports.asyncClassFactory = asyncClassFactory;
 
-function asyncClassFactory(opts) {
-  return function asyncClass(Base) {
-    var constructor = Base.constructor;
-    __extends(WrapClass, Base);
-
-    function WrapClass() {
-      Base.apply(this, arguments);
-      var ptrLoader = this.renderLoader;
-      var ptrError = this.renderError;
-      if (opts) {
-        var renderLoader = opts.renderLoader;
-        if (typeof renderLoader === 'function') {
-          ptrLoader = renderLoader;
-        } else if (typeof renderLoader === 'string') {
-          ptrLoader = this[renderLoader];
-        }
-        var renderError = opts.renderError;
-        if (typeof renderError === 'function') {
-          ptrError = renderError;
-        } else if (typeof renderError === 'string') {
-          ptrError = this[renderError]
-        }
-      }
-      if (this.renderLoader === undefined) {
-        this.renderLoader = ptrLoader;
-      } else {
-        ptrLoader = this.renderLoader;
-      }
-      if (this.renderError === undefined) {
-        this.renderError = ptrError;
-      } else {
-        ptrError = this.renderError;
-      }
-      this.render = wrapRender(this.render, ptrLoader, ptrError);
-      return this;
+module.exports.listenTo = listenTo;
+function listenTo(ctx, fetchers) {
+  var arr = Array.isArray(fetchers) ? fetchers : fetchers ? [fetchers] : [];
+  if (arr.length) {
+    var update = function() {
+      ctx.forceUpdate();
     }
-    return WrapClass;
+    arr.forEach(function(fetcher) {
+      fetcher.addUpdater(update);
+      var componentWillUnmount = ctx.componentWillUnmount;
+      ctx.componentWillUnmount = function() {
+        if (componentWillUnmount) {
+          componentWillUnmount.apply(this, arguments);
+        }
+        fetcher.removeUpdater(update);
+      }
+    });
   }
+}
 
+function asyncClassFactory(opts) {
+  return function listenWrap(fetchers) {
+    return function asyncClass(Base) {
+      __extends(WrapClass, Base);
+
+      function WrapClass() {
+        Base.apply(this, arguments);
+        var ptrLoader = this.renderLoader;
+        var ptrError = this.renderError;
+        if (opts) {
+          var renderLoader = opts.renderLoader;
+          if (typeof renderLoader === 'function') {
+            ptrLoader = renderLoader;
+          } else if (typeof renderLoader === 'string') {
+            ptrLoader = this[renderLoader];
+          }
+          var renderError = opts.renderError;
+          if (typeof renderError === 'function') {
+            ptrError = renderError;
+          } else if (typeof renderError === 'string') {
+            ptrError = this[renderError];
+          }
+        }
+        if (this.renderLoader === undefined) {
+          this.renderLoader = ptrLoader;
+        } else {
+          ptrLoader = this.renderLoader;
+        }
+        if (this.renderError === undefined) {
+          this.renderError = ptrError;
+        } else {
+          ptrError = this.renderError;
+        }
+        this.render = wrapRender(this.render, ptrLoader, ptrError);
+        listenTo(this, fetchers);
+        return this;
+      }
+      return WrapClass;
+    }
+  }
 }
 module.exports.asyncClass = asyncClassFactory();
+
+module.exports.listenClass = listenClass;
+function listenClass(Base, fetchers) {
+    __extends(WrapClass, Base);
+    function WrapClass() {
+      Base.apply(this, arguments);
+      listenTo(this, fetchers);
+      return this;
+    };
+}
 
 module.exports.asyncMethodFactory = asyncMethodFactory;
 
@@ -125,5 +158,5 @@ function asyncMethodFactory(opts) {
 }
 module.exports.asyncMethod = asyncMethodFactory();
 
-module.exports.initFetchers = require('./lib/fetcher').create;
+module.exports.initFetchers = libFetcher.create;
 module.exports.initReduxFetchers = require('./lib/redux').initRedux;

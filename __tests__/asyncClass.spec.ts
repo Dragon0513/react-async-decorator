@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { asyncClass } from '../index';
+import { asyncClass, listenClass } from '../index';
 import { create } from '../src/fetcher';
 
 import { renderToString } from 'react-dom/server';
@@ -7,7 +7,7 @@ import { createApi } from './helpers';
 import { IFetcher } from '../src/interfaces';
 
 const createFetcher = create();
-@asyncClass
+@asyncClass()
 class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
 	render() {
 		const data = this.props.fetcher.get();

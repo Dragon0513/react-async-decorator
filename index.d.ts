@@ -9,12 +9,17 @@ export interface BaseT {
 	new(...args: any[]): {};
 }
 
-export const asyncClass: <T extends BaseT>(c: T) => T;
+import { create as initFetchers } from './lib/fetcher' ;
+import { IUpdater } from './lib/interfaces';
+
+export function asyncClass(fetchers?: IUpdater | IUpdater[] | any): <T extends BaseT>(c: T) => T;
+
 export function asyncClassFactory(opts?: IAsyncFetch): typeof asyncClass;
 
+export const listenTo: (ctx: any, fetchers?: IUpdater | IUpdater[]) => void;
+export const listenClass: <T extends BaseT>(fetchers?: IUpdater | IUpdater[]) => (c: T) => T;
 export const asyncMethod: (target: any, propertyKey: string) => void;
 export function asyncMethodFactory(opts?: IAsyncFetch): typeof asyncMethod
 
-import { create as initFetchers } from './lib/fetcher' ;
 import { initRedux as initReduxFetchers } from './lib/redux';
-export { initFetchers, initReduxFetchers };
+export { initFetchers, initReduxFetchers, IUpdater };

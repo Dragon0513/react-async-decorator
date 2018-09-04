@@ -4,10 +4,11 @@ import {
 	IFetcherOption,
 	AnyResult,
 	IFetcherFunction,
-	IFetcher,
+  IFetcher,
 	IActionFetch,
 	IFetcherContext,
 	IFetcherFnContext,
+  IUpdater,
 } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
@@ -24,23 +25,60 @@ function hashArg<T>(arg?: T): string {
 	return JSON.stringify(arg);
 }
 
-export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions> {
+export interface IUpdaterKeeper {
+  ctx?: any;
+  fn(): void;
+}
+
+export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions>, IUpdater {
 	private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
-	private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
+  private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
 
 	private hashArg: (opt?: GetOptions) => string;
 	private context: IFetcherContext<T>;
   private holder: Holder<T>;
   private manual = false;
+  private updates: IUpdaterKeeper[] = [];
+  private updateFetcher() {
+    this.updates.forEach(item => {
+      item.fn.call(item.ctx)
+    });
+  }
 
 	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
-    const holder = (this.holder = new Holder<T>(opts));
+    const store = {
+      ...opts.store,
+      dispatch: (action: any) => {
+        const result = opts.store.dispatch(action);
+        if (action.type === opts.action) {
+          const mode = action.action;
+          if (mode === 'set' || mode === 'error') {
+            this.updateFetcher();
+          }
+        }
+        return result;
+      }
+    }
+    const holder = (this.holder = new Holder<T>({ ...opts, store }));
 		this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
 		this.impl(impl as any);
     this.context = { holder, hash: this.hashArg };
     this.manual = opts.manual;
-	}
+  }
+
+  addUpdater(fn: () => void, ctx?: any): void {
+    this.updates.push({ fn, ctx })
+  }
+
+  removeUpdater(fn: () => void, ctx?: any): void {
+    this.updates = this.updates.filter(item => {
+      if (ctx && ctx === item.ctx) {
+        return false;
+      }
+      return item.fn !== fn
+    });
+  }
 
 	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void {
 		this.load = load;

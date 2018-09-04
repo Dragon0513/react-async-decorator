@@ -82,6 +82,28 @@ test('fetcher impl', () => {
 	);
 });
 
+
+test('listeners fetchers', async () => {
+  const obj = { id: 1 };
+  const fetcher = createFetcher<any, typeof obj, typeof obj>(() => Promise.resolve(obj));
+  fetcher.implModify((res) => Promise.resolve(res));
+
+  let counter = 0;
+  const updater = () => counter++;
+  fetcher.addUpdater(updater);
+  await fetcher.asyncGet();
+  expect(counter).toBe(1);
+  await fetcher.asyncGet();
+  expect(counter).toBe(1);
+  const data = await fetcher.asyncSet({ id: 2 });
+  expect(counter).toBe(2);
+  expect(data.id).toBe(2);
+  fetcher.removeUpdater(updater);
+  const data2 = await fetcher.asyncSet({ id: 3 });
+  expect(counter).toBe(2);
+  expect(data2.id).toBe(3);
+});
+
 test('fetcher with args', async () => {
 	const obj = { id: 1 };
 	const api = createApi<typeof obj>();
