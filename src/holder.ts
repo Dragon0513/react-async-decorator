@@ -2,99 +2,83 @@ import {
 	IOption,
 	IDataItem,
 	IHolder,
-	IActionFetchRequest,
-	IActionFetchSet,
-	IActionFetchError,
-	IActionFetch,
+  IActionsLifecycle,
+  IOptionActions,
+  IActionFetchSet,
+  IActionFetchError,
+  IActionFetch
 } from './interfaces';
 import { TSyncPromise } from './promise';
 
-export class Holder<T> implements IHolder<T> {
-	private container: Partial<Record<string, TSyncPromise<T>>> = {};
-	static notExist = TSyncPromise.reject<any>(new Error("Doesn't exist"));
+export function createActions<T>(opts: IOptionActions, holder: Holder<T>): IActionsLifecycle<T> {
+  const { store, name, action } = opts;
+  const actions: IActionsLifecycle<T> = {
+    success(keys: string[], params: Record<string, TSyncPromise<T>>, payloads: T[]) {
+      const allowKeys = keys.filter(key => holder.allow(key, params[key]));
+      const indexes = allowKeys.map(key => keys.indexOf(key));
+      const payload: Record<string, T> = {};
+      indexes.forEach(id => {
+        payload[keys[id]] = payloads[id];
+      });
+      if (indexes.length) {
+        const act2: IActionFetchSet = {
+          type: action,
+          action: 'set',
+          name,
+          payload,
+        };
+        store.dispatch(act2);
+      }
+    },
+    error(keys: string[], params: Record<string, TSyncPromise<T>>, error: Error) {
+      const allowKeys = keys.filter(key => holder.allow(key, params[key]));
+      const indexes = allowKeys.map(key => keys.indexOf(key));
+      const payload: Record<string, Error> = {};
+      indexes.forEach(id => {
+        payload[keys[id]] = error;
+      });
+      const act2: IActionFetchError = {
+        type: action,
+        action: 'error',
+        name,
+        payload,
+      };
+      store.dispatch(act2);
+    },
+    request(keys: string[]) {
+      const act: IActionFetch = { type: action, action: 'request', name, keys };
+      store.dispatch(act);
+    }
+  };
+  return actions;
+}
 
-	constructor(private props: IOption) {}
+export class Holder<T> implements IHolder<T> {
+  private container: Partial<Record<string, TSyncPromise<T>>> = {};
+	static notExist = TSyncPromise.reject<any>(new Error("Doesn't exist"));
+  public actions: IActionsLifecycle<T>;
+	constructor(private props: IOption) {
+    this.actions = createActions(props, this);
+  }
 
 	set(params: Record<string, TSyncPromise<T>>): void;
 	set(key: string, defer: TSyncPromise<T>): void;
 	set(aKey: any, aDefer?: any) {
-		const { store, name, action } = this.props;
-		if (aDefer !== undefined) {
-			if (!this.props.manual) {
-				const act: IActionFetchRequest = { type: action, action: 'request', name, keys: aKey };
-				store.dispatch(act);
-				aDefer.then(
-					payload => {
-						if (!this.allow(aKey, aDefer)) {
-							return;
-						}
-						const act2: IActionFetchSet = {
-							type: action,
-							action: 'set',
-							name,
-							payload: { [aKey]: payload },
-						};
-						store.dispatch(act2);
-					},
-					error => {
-						if (!this.allow(aKey, aDefer)) {
-							return;
-						}
-						const act2: IActionFetchError = {
-							type: action,
-							action: 'error',
-							name,
-							payload: { [aKey]: error },
-						};
-						store.dispatch(act2);
-					}
-				);
-			}
-			this.container[aKey] = aDefer;
-		} else {
-			const keys = Object.keys(aKey);
-			const params: Record<string, TSyncPromise<T>> = aKey;
-			const act: IActionFetch = { type: action, action: 'request', name, keys };
-			store.dispatch(act);
-			const defers = keys.map(key => {
-				this.container[key] = params[key];
-				return params[key];
-			});
-			TSyncPromise.all<T>(defers).then(
-				payloads => {
-					const allowKeys = keys.filter(key => this.allow(key, params[key]));
-					const indexes = allowKeys.map(key => keys.indexOf(key));
-					const payload: Record<string, T> = {};
-					indexes.forEach(id => {
-						payload[keys[id]] = payloads[id];
-					});
-					if (indexes.length) {
-						const act2: IActionFetchSet = {
-							type: action,
-							action: 'set',
-							name,
-							payload,
-						};
-						store.dispatch(act2);
-					}
-				},
-				error => {
-					const allowKeys = keys.filter(key => this.allow(key, params[key]));
-					const indexes = allowKeys.map(key => keys.indexOf(key));
-					const payload: Record<string, Error> = {};
-					indexes.forEach(id => {
-						payload[keys[id]] = error;
-					});
-					const act2: IActionFetchError = {
-						type: action,
-						action: 'error',
-						name,
-						payload,
-					};
-					store.dispatch(act2);
-				}
-			);
-		}
+
+    const isPropsArg = aDefer !== undefined;
+    const keys = isPropsArg ? [aKey] : Object.keys(aKey);
+    const params: Record<string, TSyncPromise<T>> = isPropsArg ? { [aKey]: aDefer } : aKey;
+    const defers = keys.map(key => {
+      this.container[key] = params[key];
+      return params[key];
+    });
+    if (!this.props.manual) {
+      this.actions.request(keys);
+      TSyncPromise.all<T>(defers).then(
+        payloads => this.actions.success(keys, params, payloads),
+        error => this.actions.error(keys, params, error)
+      );
+    }
 	}
 
 	allow(key: string, defer: TSyncPromise<T>): boolean {

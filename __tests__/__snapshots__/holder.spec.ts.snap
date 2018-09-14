@@ -4,14 +4,34 @@ exports[`Holder::(set, clear) 1`] = `
 Array [
   Object {
     "action": "request",
-    "keys": "success",
+    "keys": Array [
+      "success",
+    ],
     "name": "test",
     "type": "action",
   },
   Object {
-    "action": "request",
-    "keys": "error",
+    "action": "set",
     "name": "test",
+    "payload": Object {
+      "success": 1,
+    },
+    "type": "action",
+  },
+  Object {
+    "action": "request",
+    "keys": Array [
+      "error",
+    ],
+    "name": "test",
+    "type": "action",
+  },
+  Object {
+    "action": "error",
+    "name": "test",
+    "payload": Object {
+      "error": [Error: error],
+    },
     "type": "action",
   },
   Object {

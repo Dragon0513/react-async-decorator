@@ -146,9 +146,14 @@ test('manualStore with caching', async () => {
 	};
 
 	const fetcher = createFetcher<User[], number[], never>(
-		(ids, { holder, hash }) => {
+		(ids, { holder, hash, actions }) => {
+
 			const newIds = ids.filter(id => !holder.getAwait(hash(id)));
-			const props: Record<string, Promise<User>> = {};
+      const props: Record<string, Promise<User>> = {};
+
+      const keys = newIds.map(id => hash(id));
+      actions.request(keys);
+
 			const pUsers = newIds.map(id => {
 				const user = getUser(id);
 				props['' + id] = user;
@@ -156,20 +161,25 @@ test('manualStore with caching', async () => {
 			});
 
 			holder.set(props as any);
+      const res = TSyncPromise.all(pUsers);
+			res.then(
+        users => actions.success(keys, props as any, users as any),
+        err => actions.error(keys, props as any, err)
+      );
 
-			return TSyncPromise.all(pUsers).then(() => {
-				const users = ids.map(id => {
+      return res.then(_ => {
+        const users = ids.map(id => {
 					const key = hash(id);
 					const user = (holder.get(key) as any) as User;
 					return user;
 				});
 				return users;
-			});
+      });
 		},
 		{ manualStore: true }
 	);
 
-	const user12 = await fetcher.asyncGet([1, 2]);
+  const user12 = await fetcher.asyncGet([1, 2]);
 	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]).toEqual(user12);
 	expect(counter).toBe(2);
 

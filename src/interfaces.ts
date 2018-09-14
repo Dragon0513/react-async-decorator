@@ -55,11 +55,14 @@ export interface MiddlewareAPI<D extends Dispatch = Dispatch<any>, S = Record<st
 	getState(): S;
 }
 
-export interface IOption {
-	name: string;
-	action: string; // action for redux
+export interface IOptionActions {
+  name: string;
+  action: string; // action for redux
+  store: MiddlewareAPI;
+}
+
+export interface IOption extends IOptionActions {
 	key: string; // key in store
-	store: MiddlewareAPI;
 	manual: boolean;
 	hashArg?(arg?: any): string;
 }
@@ -80,9 +83,15 @@ export interface IHolder<T> {
 	awaitAll(): TSyncPromise<T[]>;
 }
 
+export interface IActionsLifecycle<T> {
+  request(keys: string[]): void;
+  success(keys: string[], params: Record<string, TSyncPromise<T>>, payloads: T[]): void;
+  error(keys: string[], params: Record<string, TSyncPromise<T>>, error: Error): void;
+}
 export interface IFetcherContext<T> {
 	holder: IHolder<T>;
-	hash(arg?: any): string;
+  hash(arg?: any): string;
+  actions: IActionsLifecycle<T>;
 }
 export interface IFetcherFunction<T, GetOptions, SetOptions> {
 	load?: IFetcherFnContext<GetOptions, AnyResult<T>>;

@@ -7,8 +7,12 @@ import {
   IFetcher,
 	IActionFetch,
 	IFetcherContext,
-	IFetcherFnContext,
+  IFetcherFnContext,
+  IActionsLifecycle,
   IUpdater,
+  IOptionActions,
+  IActionFetchSet,
+  IActionFetchError,
 } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
@@ -29,6 +33,8 @@ export interface IUpdaterKeeper {
   ctx?: any;
   fn(): void;
 }
+
+
 
 export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions>, IUpdater {
 	private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
@@ -58,12 +64,13 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
         }
         return result;
       }
-    }
-    const holder = (this.holder = new Holder<T>({ ...opts, store }));
+    };
+    const holderOpts = { ...opts, store };
+    const holder = (this.holder = new Holder<T>(holderOpts));
 		this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
-		this.impl(impl as any);
-    this.context = { holder, hash: this.hashArg };
+    this.impl(impl as any);
+    this.context = { holder, hash: this.hashArg, actions: holder.actions };
     this.manual = opts.manual;
   }
 
