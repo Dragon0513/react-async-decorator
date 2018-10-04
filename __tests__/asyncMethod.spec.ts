@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
-import { asyncMethod } from '../index';
+import { asyncMethod, listenTo } from '../index';
 import { create } from '../src/fetcher';
 const createFetcher = create();
 import * as Enzyme from 'enzyme';
@@ -10,7 +10,12 @@ import { IFetcher } from '../src/interfaces';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 
+
 class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
+  constructor(props: { fetcher: IFetcher<string> }, ctx: any) {
+    super(props, ctx);
+    listenTo(this, props.fetcher);
+  }
 	render() {
 		return React.createElement('div', {}, this.renderComponent());
 	}

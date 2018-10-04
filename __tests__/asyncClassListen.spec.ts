@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { asyncClass, listenClass } from '../index';
+import { asyncClass } from '../index';
 import { create } from '../src/fetcher';
 import * as Enzyme from 'enzyme';
 import EnzymeAdapter from 'enzyme-adapter-react-16';

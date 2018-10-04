@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { asyncClass, listenClass } from '../index';
+import { asyncClass } from '../index';
 import { create } from '../src/fetcher';
 
 import { renderToString } from 'react-dom/server';

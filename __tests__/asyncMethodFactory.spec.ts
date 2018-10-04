@@ -1,12 +1,16 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createApi } from './helpers';
-import { asyncMethodFactory } from '../index';
+import { asyncMethodFactory, listenTo } from '../index';
 import { create } from '../src/fetcher';
 import { IFetcher } from '../src/interfaces';
 const createFetcher = create();
 
 class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
+  constructor(props: { fetcher: IFetcher<string> }, ctx: any) {
+    super(props, ctx);
+    listenTo(this, props.fetcher);
+  }
 	render() {
 		return React.createElement('div', { className: 'test' }, this.renderComponent());
 	}
