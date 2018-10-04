@@ -47,8 +47,8 @@ class Test extends React.Component {
 
 ## Documentation
 
-- [index.md](index.md)
-- [asyncMethod.md](asyncMethod.md)
+- [index.md](docs/index.md)
+- [asyncMethod.md](docs/asyncMethod.md)
 
 ## Running the tests
 
@@ -68,7 +68,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Efremov Alexey** = [lexich](https://github.com/lexich)
+* **Efremov Alexey** - [lexich](https://github.com/lexich)
 
 ## License
 
