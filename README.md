@@ -1,13 +1,32 @@
 # react-async-decorator
 
+New way to organize your asynchronous flow in react applications. inspired by [Dan Abramov: Beyond React 16](https://www.youtube.com/watch?v=nLF0n9SACd4).
+
 [![Build Status](https://travis-ci.org/lexich/react-async-decorator.svg?branch=master)](https://travis-ci.org/lexich/react-async-decorator)
 
-## Examples
+## Getting Started
+
+### Installing
+
+```sh
+npm install react-async-decorator
+```
+
+If you prefer [yarn](https://yarnpkg.com)
+
+```sh
+yarn react-async-decorator
+```
+
+### Simple example
 
 ```js
 import { asyncClass, initFetchers } from 'react-async-decorator';
 const config = initFetchers();
 const fetcher = config.createFetcher(() => fetch('/data.json'));
+
+// If you don't want to use decorators, it should be replaced next syntax
+// const WrapTest = asyncClass(fetcher)(Test);
 @asyncClass(fetcher)
 class Test extends React.Component {
     render() {
@@ -26,53 +45,31 @@ class Test extends React.Component {
 }
 ```
 
-```js
-import { asyncMethod, initFetchers } from 'react-async-decorator';
-const config = initFetchers();
-const fetcher = config.createFetcher(() => fetch('/data.json'))
-
-class Test extends React.Component {
-    render() {
-        // This content will be rendered always
-        return <div>{ this.renderContent() }</div>;
-    }
-    @asyncMethod
-    renderContent() {
-        const data = fetcher.get();
-        // This content will be rendered after success response of fetch request
-        return <div>{data}</div>;
-    }
-    renderLoader() {
-        // This content will be rendered while fetch request in progress
-        return <div>Loading</div>;
-    }
-    renderError(err) {
-        // This content will be rendered after fail response of fetch request
-        return <div>{err.message}</div>;
-    }
-}
-```
-
-If you don't want to use decorators, it should be replaced next syntax
-
-```js
-class Test1 {
-
-}
-const WrapTest1 = asyncClass(Test1);
-```
-
 ## Documentation
 
-> initFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data.
-> initReduxFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data with store it in redux store
-> asyncMethod - wraps class method to use fetcher functionality in it.
-> asyncClass - wraps class method `render` to use fetcher functionality in it.
-> asyncClassFactory(options: IAsyncFetch) - create asyncClass with `options` configurations.
-> asyncMethodFactory(options: IAsyncFetch) - create asyncMethod with `options` configurations.
-> IAsyncFetch
-- renderLoading - (string | Function) name of class method or realization loader behaviour for render loading process.
-- renderError - (string | Function) name of class method or realization loader behaviour for render error process.
-> Fetcher
-- get(...args): Data - must be use in wrapped method by `asyncMethod` or `asyncClass`.
-- clear() - clear all previous cached data.
+- [index.md](index.md)
+- [asyncMethod.md](asyncMethod.md)
+
+## Running the tests
+
+All unit tests are in `__tests__` folder. They are written with [jest](https://jestjs.io/).
+
+```sh
+npm test
+```
+
+## Contributing
+
+We are happy any contributions. Please be aware of all unit-tests and linters passed.
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/lexich/react-async-decorator/tags). Thanks for [standard-version](https://github.com/conventional-changelog/standard-version) for automation.
+
+## Authors
+
+* **Efremov Alexey** = [lexich](https://github.com/lexich)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details
