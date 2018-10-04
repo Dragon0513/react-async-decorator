@@ -9,13 +9,11 @@
 
 This library has 2 ways to decorate your component. The Simplest way to use `asyncClass`. It patch your `react component` method render.
 
-```doc
-decorates your react component to use fetchers inside.
-
-asyncClass(fetchers)(ReactComponent)
-- fetchers - can be single fetcher or array of fetchers. If fetchers would be updated outside component, to rerender current component.
-- ReactComponent - your react component
-```
+| method | type | description |
+|:-------|:-----|:------------|
+| **asyncClass**(fetchers)(ReactComponent) | function | decorates your react component method `render` to use fetchers inside. |
+| **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. |
+| **ReactComponent** | react component | |
 
 ```js
 // pseudocode
@@ -35,6 +33,10 @@ render() {
 ### asyncMethod
 
 Second way use `asyncMethod`. It may be usefull to decorate method with returns `JSX` but calls from render method. It's wrapped the same way as `asyncClass`.
+| method | type | description |
+|:-------|:-----|:------------|
+| asyncMethod(fetchers) | function | decorates your react component method to use fetchers inside. You can use it only with decorators syntax |
+| **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. 
 
 ```js
 render() {
@@ -46,7 +48,35 @@ renderBody() {
 }
 ```
 
+### listenClass
+TODO
+
+| method | type | description |
+|:-------|:-----|:------------|
+| **asyncClass**(fetchers)(ReactComponent) | Function | TODO |
+| **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. |
+| **ReactComponent** | react component | - |
+
+
+### listenTo
+TODO
+
+| method | type | description |
+|:-------|:-----|:------------|
+| listenTo(context, fetchers) | Function |  TODO |
+| context | instance (`this`) of react component | 
+| **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. |
+
+### asyncClassFactory
 By default `asyncClass` and `asyncMethod` have predefined behaviour. They use `renderLoading` method for rendering loading state and `renderError(error)` method for error state. This methods should implement in your component. If they would miss, it means, they will be returns `null` (empty conentent for `react`). It's not very convinient to implement `renderLoading` and `renderError(error)` in every component.
+| method | type | description |
+|:-------|:-----|:------------|
+
+
+### asyncMethodFactory
+| method | type | description |
+|:-------|:-----|:------------|
+
 
 
 ## Fetchers
