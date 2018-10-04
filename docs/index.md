@@ -33,6 +33,7 @@ render() {
 ### asyncMethod
 
 Second way use `asyncMethod`. It may be usefull to decorate method with returns `JSX` but calls from render method. It's wrapped the same way as `asyncClass`.
+
 | method | type | description |
 |:-------|:-----|:------------|
 | asyncMethod(fetchers) | function | decorates your react component method to use fetchers inside. You can use it only with decorators syntax |
@@ -69,11 +70,13 @@ TODO
 
 ### asyncClassFactory
 By default `asyncClass` and `asyncMethod` have predefined behaviour. They use `renderLoading` method for rendering loading state and `renderError(error)` method for error state. This methods should implement in your component. If they would miss, it means, they will be returns `null` (empty conentent for `react`). It's not very convinient to implement `renderLoading` and `renderError(error)` in every component.
+
 | method | type | description |
 |:-------|:-----|:------------|
 
 
 ### asyncMethodFactory
+
 | method | type | description |
 |:-------|:-----|:------------|
 
