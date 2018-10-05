@@ -97,16 +97,38 @@ class Component extends React.Component {
 ### asyncClassFactory
 By default `asyncClass` and `asyncMethod` have predefined behaviour. They use `renderLoading` method for rendering loading state and `renderError(error)` method for error state. This methods should implement in your component. If they would miss, it means, they will be returns `null` (empty conentent for `react`). It's not very convinient to implement `renderLoading` and `renderError(error)` in every component.
 
+
 | method | type | description |
 |:-------|:-----|:------------|
+| asyncClassFactory | Function | configure `asyncClass` decorator (see it [description](#asyncClass) )
+| options | Object or `undefined` | By default (`undefined`) User `renderLoading` method for render loading state and `renderError(error)` method for render error state |
+| options.renderLoader | String or Function | If uses string value, it defines method name for render loading state, otherwise function definition implements this behaviour by default for all components, which would be used preconfigured decoractor. Also you can overwrite this behaviour by implementing `renderLoading`.
+| options.renderError | String or Function | The same behaviour as `options.renderLoader` for render error state.
 
+
+```js
+asyncClass === asyncClassFactory({
+   renderLoader: 'renderCustomNameLoading',
+   renderError: (err) => (<div>{err.message}</div>)
+});
+```
 
 ### asyncMethodFactory
 
+
 | method | type | description |
 |:-------|:-----|:------------|
+| asyncMethodFactory | Function | configure `asyncMethod` decorator (see it [description](#asyncMethod) )
+| options | Object or `undefined` | By default (`undefined`) User `renderLoading` method for render loading state and `renderError(error)` method for render error state |
+| options.renderLoader | String or Function | If uses string value, it defines method name for render loading state, otherwise function definition implements this behaviour by default for all components, which would be used preconfigured decoractor. Also you can overwrite this behaviour by implementing `renderLoading`.
+| options.renderError | String or Function | The same behaviour as `options.renderLoader` for render error state.
 
-
+```js
+asyncClass === asyncMethodFactory({
+   renderLoader: 'renderCustomNameLoading',
+   renderError: (err) => (<div>{err.message}</div>)
+});
+```
 
 ## Fetchers
 
