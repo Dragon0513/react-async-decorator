@@ -200,6 +200,7 @@ TODO
 ### Fetcher
 
 | method | type | description |
+|:-------|:-----|:------------|
 | get | - | TODO |
 | asyncGet | - | TODO |
 | asyncSet | - | TODO |
