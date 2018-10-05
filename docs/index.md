@@ -139,15 +139,61 @@ class Component extends React.Component {
 
 ## Fetchers
 
-> initFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data.
-> initReduxFetchers(): (createFetcher() => Fetcher) - create special fetcher, that return `Fetcher` object that allow to construct access to async data with store it in redux store
-> asyncMethod - wraps class method to use fetcher functionality in it.
-> asyncClass - wraps class method `render` to use fetcher functionality in it.
-> asyncClassFactory(options: IAsyncFetch) - create asyncClass with `options` configurations.
-> asyncMethodFactory(options: IAsyncFetch) - create asyncMethod with `options` configurations.
-> IAsyncFetch
-- renderLoading - (string | Function) name of class method or realization loader behaviour for render loading process.
-- renderError - (string | Function) name of class method or realization loader behaviour for render error process.
-> Fetcher
+`Fetchers` is core part of `react-async-decorator` library. They allow to organize your data flows. Basicly you can use internal data store which is defined by `initFetchers`. But also it's possible to use it with (redux)[https://redux.js.org]. For this purposes use `initReduxFetchers`
+
+### initFetchers
+
+| method | type | description |
+|:-------|:-----|:------------|
+| initFetchers(options) | Function | Defines fetcher's creator with internal storage
+| options | Object or undefined | if you want to use internal storage, you shouldn't use options at all.
+| options.createStore | Function | your implementation of dataStore. Should return object which implements `MiddlewareAPI` from redux library with `dispatch` and `getState` methods. The better way to understand how to write it correctly to read source code.
+| options.action | string | name of `redux-like` action ({ type: `action` }) which will be used internally
+| options.key | string | reserved name in `redux-like` store where data will be kept.
+| return value | () => Fetcher | Fetcher's creator |
+
+```js
+const createFetcher = initFetchers();
+
+const fetcher = createFetcher(() => ....);
+```
+
+### initReduxFetchers
+
+| method | type | description |
+|:-------|:-----|:------------|
+| initFetchers(options) | Function | Defines fetcher's creator with redux storage
+| options | Object | - 
+| options.action | string | name of `redux` action ({ type: `action` }) which will be used internally
+| options.key | string | reserved name in `redux` store where data will be kept.
+| return | { use, reducer, createFetcher } | - |
+| return.use | Function | You should call this method to keep reference to redux store
+| return.reducer | Function | Use this `reducer` with other redux reducer
+| return.createFetcher | Function | Fetcher's creator
+
+```js
+import { createStore } from 'redux';
+
+const FETCHER_ACTION = 'FETCHER_ACTION';
+const conf = initReduxFetchers({
+   action: FETCHER_ACTION,
+   key: 'fetcher_key_store'
+});
+
+const store = createStore(conf.reducer, {});
+conf.use(store);
+
+const fetcher = conf.createFetcher(() => ....);
+
+```
+
+### createFetcher
+
+TODO
+
+### Fetcher
+
+TODO
+
 - get(...args): Data - must be use in wrapped method by `asyncMethod` or `asyncClass`.
 - clear() - clear all previous cached data.
