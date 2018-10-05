@@ -36,37 +36,63 @@ Second way use `asyncMethod`. It may be usefull to decorate method with returns 
 
 | method | type | description |
 |:-------|:-----|:------------|
-| asyncMethod(fetchers) | function | decorates your react component method to use fetchers inside. You can use it only with decorators syntax |
-| **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. 
+| asyncMethod | function | decorates your react component method to use fetchers inside. You can use it only with decorators syntax |
 
 ```js
 render() {
   return <div>{this.renderBody()}</div>
 }
-@asyncMethod(fetcher)
+@asyncMethod
 renderBody() {
   return <div>{ fetcher.get() }</div>
 }
 ```
 
 ### listenClass
-TODO
+
+If you need to subscribe component on fetcher's updates, this method helps to do it in declarative way. This decorator should be used when component decorates by `asyncMethod`.
 
 | method | type | description |
 |:-------|:-----|:------------|
-| **asyncClass**(fetchers)(ReactComponent) | Function | TODO |
+| **asyncClass**(fetchers)(ReactComponent) | Function | subscribe component on fetcher's updates |
 | **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. |
 | **ReactComponent** | react component | - |
 
+```js
+@listenClass(fetcher)
+class Component extends React.Component {
+   render() {
+      return <div>{this.renderBody()}</div>
+   }
+   @asyncMethod
+   renderBody() {
+      return <div>{ fetcher.get() }</div>
+   }
+}
+```
 
 ### listenTo
-TODO
+
+It's internal method, which deliver the same functionality as `listenClass`. May be useful when fetchers brings using props.
 
 | method | type | description |
 |:-------|:-----|:------------|
-| listenTo(context, fetchers) | Function |  TODO |
+| listenTo(context, fetchers) | Function | subscribe component on fetcher's updates |
 | context | instance (`this`) of react component | 
 | **fetchers** | fetcher or array of fetchers | If fetchers would be updated outside component, to rerender current component. |
+
+```js
+class Component extends React.Component {
+   constructor(props, context) {
+      super(props, context);
+      listenTo(this, props.fetcher);
+   }
+   render() {
+     const data = this.props.fetcher.get();
+     return <div>{ data }</div>;
+   }
+}
+```
 
 ### asyncClassFactory
 By default `asyncClass` and `asyncMethod` have predefined behaviour. They use `renderLoading` method for rendering loading state and `renderError(error)` method for error state. This methods should implement in your component. If they would miss, it means, they will be returns `null` (empty conentent for `react`). It's not very convinient to implement `renderLoading` and `renderError(error)` in every component.
