@@ -191,9 +191,30 @@ const fetcher = conf.createFetcher(() => ....);
 
 TODO
 
+| method | type | description |
+|:-------|:-----|:------------|
+| createFetcher(fn) | Function | Function which create fetchers
+| fn | Function | Function should return `Promise` or `TSyncPromise` or `Fetcher` or Array of these primitives. See [Examples](#examples)
+| return | Fetcher | -
+
 ### Fetcher
+
+| method | type | description |
+| get | - | TODO |
+| asyncGet | - | TODO |
+| asyncSet | - | TODO |
+| impl | - | TODO |
+| implModify | - | TODO |
+| clear | - | clear all previous cached data. |
+| await | - | TODO |
+| awaitAll | - | TODO |
+| isLoading | - | TODO |
+
+
+### TSyncPromise
 
 TODO
 
-- get(...args): Data - must be use in wrapped method by `asyncMethod` or `asyncClass`.
-- clear() - clear all previous cached data.
+## Examples
+
+TODO
