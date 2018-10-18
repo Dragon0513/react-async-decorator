@@ -189,7 +189,7 @@ const fetcher = conf.createFetcher(() => ....);
 
 ### createFetcher
 
-TODO
+Method to create fetcher object, to manipulate data in asynchronous flow. see [Fetcher](#fetcher)
 
 | method | type | description |
 |:-------|:-----|:------------|
@@ -199,13 +199,15 @@ TODO
 
 ### Fetcher
 
+Class which support different data manipulations in asynchronous flow. Main idea is your keep data in cache (it might be redux store or internal store). 
+
 | method | type | description |
 |:-------|:-----|:------------|
-| get | - | TODO |
-| asyncGet | - | TODO |
-| asyncSet | - | TODO |
-| impl | - | TODO |
-| implModify | - | TODO |
+| get(args) -> Data | Function | Function to access data. This method should be called in decoration components with @asyncClass @asyncMethod. If data in cache this method returns this data. If data-loading in process it's throws Promise object which catches by decorator and processed. The same situation if error happens (it throws error). Also see `impl` |
+| asyncGet(args) -> Promise<Data> | Function | This function is like `get` function but don't throw object and return Promise |
+| asyncSet(args) -> Promise<Data> | Function | This function is modify behaviour which is defined by `implModify` |
+| impl | Function | Function should return `Promise` or `TSyncPromise` or `Fetcher` or Array of these primitives. See [Examples](#examples). Implements loading strategy for fetcher. |
+| implModify | - | Function should return `Promise` or `TSyncPromise` or `Fetcher` or Array of these primitives. Implements modifing strategy for fetcher. See [Examples](#examples). |
 | clear | - | clear all previous cached data. |
 | await | - | TODO |
 | awaitAll | - | TODO |
@@ -217,5 +219,5 @@ TODO
 TODO
 
 ## Examples
-
 TODO
+
