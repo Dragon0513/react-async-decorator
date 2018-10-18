@@ -48,7 +48,7 @@ class Test extends React.Component {
 ## Documentation
 
 - [index.md](docs/index.md)
-- [asyncMethod.md](docs/asyncMethod.md)
+- [examples.md](docs/examples.md)
 
 ## Running the tests
 
