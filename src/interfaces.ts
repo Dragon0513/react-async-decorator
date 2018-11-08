@@ -130,3 +130,28 @@ export interface IFetcherOption {
 }
 
 export type TContainer<T> = Partial<Record<string, TSyncPromise<T>>>;
+
+export type TReducer<State> = (state: State, action: IActionFetch) => State;
+export interface IOptionReducer$<State> {
+	middleware?(state: State, action: IActionFetch, reducer: TReducer<State>): State;
+	setItem?(action: IActionFetch): Record<string, any> | undefined;
+}
+
+export type TMemoryStore = (opt: IOptionReducer<any>) => MiddlewareAPI;
+
+export interface ICreationBaseOptions {
+	initContainer?(key: string): TContainer<any> | undefined;
+}
+
+export interface ICreateOption extends ICreationBaseOptions {
+	createStore?: TMemoryStore;
+	action?: string;
+	key?: string;
+}
+
+export interface IOptionStore extends ICreationBaseOptions {
+	action: string;
+	key: string;
+}
+
+export type IOptionReducer<State> = IOptionStore & IOptionReducer$<State>;

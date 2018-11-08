@@ -9,12 +9,10 @@ import {
 	IFetcherContext,
 	IFetcherFnContext,
 	IUpdater,
-	FetcherState,
-	TContainer,
+	ICreateOption,
 } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
-import { IOptionReducer, createReducer } from './reduxReducer';
 import { createMemoryStore } from './memory';
 
 function notImpl() {
@@ -169,18 +167,9 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 }
 
-export type TMemoryStore = (opt: IOptionReducer<any>) => MiddlewareAPI;
-
 export type TFetcherFn<T, GetOptions, SetOptions> =
 	| IFetcherFunction<T, GetOptions, SetOptions>
 	| IFetcherFnContext<GetOptions, AnyResult<T>>;
-
-export interface ICreateOption {
-	createStore?: TMemoryStore;
-	action?: string;
-	key?: string;
-	initContainer?(key: string): TContainer<any> | undefined;
-}
 
 function getOption<T>(fn: ((opt: IFetcherOption) => T | undefined), option?: string | IFetcherOption): T | undefined {
 	return option && typeof option !== 'string' ? fn(option) : undefined;

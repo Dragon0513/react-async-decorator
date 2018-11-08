@@ -1,6 +1,14 @@
 import { create, Fetcher, TFetcherFn } from './fetcher';
-import { MiddlewareAPI, Dispatch, IDataItem, IActionFetch, IFetcherOption, FetcherState } from './interfaces';
-import { IOptionStore, createReducer, IOptionReducer } from './reduxReducer';
+import {
+	MiddlewareAPI,
+	Dispatch,
+	IDataItem,
+	IActionFetch,
+	IFetcherOption,
+	IOptionReducer,
+	IOptionStore,
+} from './interfaces';
+import { createReducer } from './reduxReducer';
 export { MiddlewareAPI, Dispatch, IDataItem, IActionFetch, Fetcher, TFetcherFn, IFetcherOption };
 
 export function initRedux<State>(opt: IOptionStore) {

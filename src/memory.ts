@@ -1,5 +1,5 @@
-import { MiddlewareAPI, FetcherState, FetcherItem, TContainer } from './interfaces';
-import { IOptionReducer, createReducer } from './reduxReducer';
+import { MiddlewareAPI, FetcherState, FetcherItem, TContainer, IOptionReducer } from './interfaces';
+import { createReducer } from './reduxReducer';
 import { TSyncPromise } from './promise';
 
 export function createMemoryStore(opt: IOptionReducer<any>, initState: FetcherState = {}): MiddlewareAPI {

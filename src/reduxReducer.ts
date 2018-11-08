@@ -1,17 +1,4 @@
-import { IActionFetch } from './interfaces';
-
-export interface IOptionStore {
-	action: string;
-	key: string;
-}
-
-export type TReducer<State> = (state: State, action: IActionFetch) => State;
-export interface IOptionReducer$<State> {
-	middleware?(state: State, action: IActionFetch, reducer: TReducer<State>): State;
-	setItem?(action: IActionFetch): Record<string, any> | undefined;
-}
-
-export type IOptionReducer<State> = IOptionStore & IOptionReducer$<State>;
+import { IActionFetch, IOptionReducer } from './interfaces';
 
 function setItemDefault(act: IActionFetch): Record<string, any> | undefined | null {
 	if (act.action === 'set') {
