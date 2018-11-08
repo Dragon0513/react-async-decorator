@@ -19,6 +19,9 @@ export function createMemoryStore(opt: IOptionReducer<any>, initState: FetcherSt
 }
 
 export function snapshotStoreFetcher(holderState: FetcherItem): TContainer<any> {
+	if (!holderState) {
+		return {};
+	}
 	return Object.keys(holderState).reduce((m2, name) => {
 		const ptr = holderState[name];
 		if (ptr) {
@@ -32,9 +35,12 @@ export function snapshotStore(
 	state: FetcherState,
 	container: Record<string, TContainer<any>> = {}
 ): Partial<Record<string, TContainer<any>>> {
+	if (!state) {
+		return container;
+	}
 	return Object.keys(state).reduce((memo, key) => {
 		const holderState = state[key];
-		if (!holderState) {
+		if (holderState) {
 			memo[key] = snapshotStoreFetcher(holderState);
 		}
 		return memo;
