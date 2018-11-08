@@ -1,6 +1,8 @@
 import { create } from '../src/fetcher';
+import { createMemoryStore } from '../src/memory';
 import { TSyncPromise } from '../src/promise';
 import { createApi } from './helpers';
+import { snapshotStore } from '../src/memory';
 const createFetcher = create();
 
 test('fetcher test', async () => {
@@ -82,26 +84,25 @@ test('fetcher impl', () => {
 	);
 });
 
-
 test('listeners fetchers', async () => {
-  const obj = { id: 1 };
-  const fetcher = createFetcher<any, typeof obj, typeof obj>(() => Promise.resolve(obj));
-  fetcher.implModify((res) => Promise.resolve(res));
+	const obj = { id: 1 };
+	const fetcher = createFetcher<any, typeof obj, typeof obj>(() => Promise.resolve(obj));
+	fetcher.implModify(res => Promise.resolve(res));
 
-  let counter = 0;
-  const updater = () => counter++;
-  fetcher.addUpdater(updater);
-  await fetcher.asyncGet();
-  expect(counter).toBe(1);
-  await fetcher.asyncGet();
-  expect(counter).toBe(1);
-  const data = await fetcher.asyncSet({ id: 2 });
-  expect(counter).toBe(2);
-  expect(data.id).toBe(2);
-  fetcher.removeUpdater(updater);
-  const data2 = await fetcher.asyncSet({ id: 3 });
-  expect(counter).toBe(2);
-  expect(data2.id).toBe(3);
+	let counter = 0;
+	const updater = () => counter++;
+	fetcher.addUpdater(updater);
+	await fetcher.asyncGet();
+	expect(counter).toBe(1);
+	await fetcher.asyncGet();
+	expect(counter).toBe(1);
+	const data = await fetcher.asyncSet({ id: 2 });
+	expect(counter).toBe(2);
+	expect(data.id).toBe(2);
+	fetcher.removeUpdater(updater);
+	const data2 = await fetcher.asyncSet({ id: 3 });
+	expect(counter).toBe(2);
+	expect(data2.id).toBe(3);
 });
 
 test('fetcher with args', async () => {
@@ -147,12 +148,11 @@ test('manualStore with caching', async () => {
 
 	const fetcher = createFetcher<User[], number[], never>(
 		(ids, { holder, hash, actions }) => {
-
 			const newIds = ids.filter(id => !holder.getAwait(hash(id)));
-      const props: Record<string, Promise<User>> = {};
+			const props: Record<string, Promise<User>> = {};
 
-      const keys = newIds.map(id => hash(id));
-      actions.request(keys);
+			const keys = newIds.map(id => hash(id));
+			actions.request(keys);
 
 			const pUsers = newIds.map(id => {
 				const user = getUser(id);
@@ -161,33 +161,58 @@ test('manualStore with caching', async () => {
 			});
 
 			holder.set(props as any);
-      const res = TSyncPromise.all(pUsers);
+			const res = TSyncPromise.all(pUsers);
 			res.then(
-        users => actions.success(keys, props as any, users as any),
-        err => actions.error(keys, props as any, err)
-      );
+				users => actions.success(keys, props as any, users as any),
+				err => actions.error(keys, props as any, err)
+			);
 
-      return res.then(_ => {
-        const users = ids.map(id => {
+			return res.then(_ => {
+				const users = ids.map(id => {
 					const key = hash(id);
 					const user = (holder.get(key) as any) as User;
 					return user;
 				});
 				return users;
-      });
+			});
 		},
 		{ manualStore: true }
 	);
 
-  const user12 = await fetcher.asyncGet([1, 2]);
+	const user12 = await fetcher.asyncGet([1, 2]);
 	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]).toEqual(user12);
 	expect(counter).toBe(2);
 
 	const user23 = await fetcher.asyncGet([2, 3]);
 	expect([{ id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(user23);
-  expect(counter).toBe(3);
+	expect(counter).toBe(3);
 
-  const userSync = fetcher.get([1, 2, 3]);
-  expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(userSync);
-  expect(counter).toBe(3);
+	const userSync = fetcher.get([1, 2, 3]);
+	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(userSync);
+	expect(counter).toBe(3);
+});
+
+test('fix initContainers backend', () => {
+	const store = {
+		test: {
+			'': {
+				data: 'Hello world',
+				loading: false,
+			},
+		},
+	};
+	const containerHash = snapshotStore(store);
+
+	const createFetcher = create({
+		initContainer(key: string) {
+			return containerHash[key];
+		},
+		createStore(opt) {
+			return createMemoryStore(opt, store);
+		},
+	});
+	const api = createApi();
+	const fetcher = createFetcher(api.fetch, { name: 'test' });
+	const data = fetcher.get();
+	expect(data).toEqual('Hello world');
 });

@@ -18,8 +18,8 @@ test('Holder::(set, clear)', () => {
 		name: 'test',
 		action: 'action',
 		key: 'key',
-    store,
-    manual: false
+		store,
+		manual: false,
 	});
 
 	holder.set('success', TSyncPromise.resolve(1));
@@ -52,8 +52,8 @@ test('Holder::get', () => {
 		name: 'test',
 		action: 'action',
 		key: 'key',
-    store,
-    manual: false
+		store,
+		manual: false,
 	});
 
 	const has1 = holder.has('item1');
@@ -94,8 +94,8 @@ test('Holder::(set, clear)', () => {
 		name: 'test',
 		action: 'action',
 		key: 'key',
-    store,
-    manual: false
+		store,
+		manual: false,
 	});
 
 	const defer = TSyncPromise.resolve(1);

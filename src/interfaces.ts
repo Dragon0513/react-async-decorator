@@ -56,15 +56,16 @@ export interface MiddlewareAPI<D extends Dispatch = Dispatch<any>, S = Record<st
 }
 
 export interface IOptionActions {
-  name: string;
-  action: string; // action for redux
-  store: MiddlewareAPI;
+	name: string;
+	action: string; // action for redux
+	store: MiddlewareAPI;
 }
 
-export interface IOption extends IOptionActions {
+export interface IOption<T> extends IOptionActions {
 	key: string; // key in store
 	manual: boolean;
 	hashArg?(arg?: any): string;
+	container?: TContainer<T>;
 }
 
 export type AnyResult<T> = T | Promise<T> | TSyncPromise<T> | Promise<T>[] | TSyncPromise<T>[];
@@ -84,14 +85,14 @@ export interface IHolder<T> {
 }
 
 export interface IActionsLifecycle<T> {
-  request(keys: string[]): void;
-  success(keys: string[], params: Record<string, TSyncPromise<T>>, payloads: T[]): void;
-  error(keys: string[], params: Record<string, TSyncPromise<T>>, error: Error): void;
+	request(keys: string[]): void;
+	success(keys: string[], params: Record<string, TSyncPromise<T>>, payloads: T[]): void;
+	error(keys: string[], params: Record<string, TSyncPromise<T>>, error: Error): void;
 }
 export interface IFetcherContext<T> {
 	holder: IHolder<T>;
-  hash(arg?: any): string;
-  actions: IActionsLifecycle<T>;
+	hash(arg?: any): string;
+	actions: IActionsLifecycle<T>;
 }
 export interface IFetcherFunction<T, GetOptions, SetOptions> {
 	load?: IFetcherFnContext<GetOptions, AnyResult<T>>;
@@ -99,8 +100,8 @@ export interface IFetcherFunction<T, GetOptions, SetOptions> {
 }
 
 export interface IUpdater {
-  addUpdater(fn: () => void, ctx?: any): void;
-  removeUpdater(fn: () => void, ctx?: any): void;
+	addUpdater(fn: () => void, ctx?: any): void;
+	removeUpdater(fn: () => void, ctx?: any): void;
 }
 
 export interface IFetcherBase<SetOptions, T> extends IUpdater {
@@ -109,7 +110,7 @@ export interface IFetcherBase<SetOptions, T> extends IUpdater {
 	awaitAll(): TSyncPromise<T[]>;
 	asyncSet(opts: SetOptions): TSyncPromise<T>;
 	implModify(modify: IFetcherFnContext<SetOptions, AnyResult<T> | undefined>): void;
-  isLoading(): boolean;
+	isLoading(): boolean;
 }
 
 export type IFetcherFn<Opt, T> = (arg?: Opt) => T;
@@ -124,6 +125,8 @@ export interface IFetcher<T, GetOptions = any, SetOptions = any> extends IFetche
 export interface IFetcherOption {
 	name?: string;
 	manualStore?: boolean;
-  setItem?(action: IActionFetch): Record<string, any> | undefined;
-  hashArg?(arg?: any): string;
+	setItem?(action: IActionFetch): Record<string, any> | undefined;
+	hashArg?(arg?: any): string;
 }
+
+export type TContainer<T> = Partial<Record<string, TSyncPromise<T>>>;

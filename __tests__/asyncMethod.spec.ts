@@ -10,12 +10,11 @@ import { IFetcher } from '../src/interfaces';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });
 
-
 class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
-  constructor(props: { fetcher: IFetcher<string> }, ctx: any) {
-    super(props, ctx);
-    listenTo(this, props.fetcher);
-  }
+	constructor(props: { fetcher: IFetcher<string> }, ctx: any) {
+		super(props, ctx);
+		listenTo(this, props.fetcher);
+	}
 	render() {
 		return React.createElement('div', {}, this.renderComponent());
 	}

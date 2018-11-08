@@ -4,19 +4,19 @@ import {
 	IFetcherOption,
 	AnyResult,
 	IFetcherFunction,
-  IFetcher,
+	IFetcher,
 	IActionFetch,
 	IFetcherContext,
-  IFetcherFnContext,
-  IActionsLifecycle,
-  IUpdater,
-  IOptionActions,
-  IActionFetchSet,
-  IActionFetchError,
+	IFetcherFnContext,
+	IUpdater,
+	FetcherState,
+	TContainer,
 } from './interfaces';
 import { Holder } from './holder';
 import { TSyncPromise } from './promise';
 import { IOptionReducer, createReducer } from './reduxReducer';
+import { createMemoryStore } from './memory';
+
 function notImpl() {
 	const msg = new Error("Fetcher wasn't implemented");
 	return TSyncPromise.reject(msg);
@@ -30,62 +30,60 @@ function hashArg<T>(arg?: T): string {
 }
 
 export interface IUpdaterKeeper {
-  ctx?: any;
-  fn(): void;
+	ctx?: any;
+	fn(): void;
 }
-
-
 
 export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOptions, SetOptions>, IUpdater {
 	private load: IFetcherFnContext<GetOptions, AnyResult<T>>;
-  private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
+	private modify: IFetcherFnContext<SetOptions, AnyResult<T>>;
 
 	private hashArg: (opt?: GetOptions) => string;
 	private context: IFetcherContext<T>;
-  private holder: Holder<T>;
-  private manual = false;
-  private updates: IUpdaterKeeper[] = [];
-  private updateFetcher() {
-    this.updates.forEach(item => {
-      item.fn.call(item.ctx)
-    });
-  }
+	private holder: Holder<T>;
+	private manual = false;
+	private updates: IUpdaterKeeper[] = [];
+	private updateFetcher() {
+		this.updates.forEach(item => {
+			item.fn.call(item.ctx);
+		});
+	}
 
-	constructor(opts: IOption, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
-    const store = {
-      ...opts.store,
-      dispatch: (action: any) => {
-        const result = opts.store.dispatch(action);
-        if (action.type === opts.action) {
-          const mode = action.action;
-          if (mode === 'set' || mode === 'error') {
-            this.updateFetcher();
-          }
-        }
-        return result;
-      }
-    };
-    const holderOpts = { ...opts, store };
-    const holder = (this.holder = new Holder<T>(holderOpts));
+	constructor(opts: IOption<T>, fn: IFetcherFunction<T, GetOptions, SetOptions>) {
+		const store = {
+			...opts.store,
+			dispatch: (action: any) => {
+				const result = opts.store.dispatch(action);
+				if (action.type === opts.action) {
+					const mode = action.action;
+					if (mode === 'set' || mode === 'error') {
+						this.updateFetcher();
+					}
+				}
+				return result;
+			},
+		};
+		const holderOpts = { ...opts, store };
+		const holder = (this.holder = new Holder<T>(holderOpts));
 		this.hashArg = opts.hashArg || hashArg;
 		const impl = fn.load || notImpl;
-    this.impl(impl as any);
-    this.context = { holder, hash: this.hashArg, actions: holder.actions };
-    this.manual = opts.manual;
-  }
+		this.impl(impl as any);
+		this.context = { holder, hash: this.hashArg, actions: holder.actions };
+		this.manual = opts.manual;
+	}
 
-  addUpdater(fn: () => void, ctx?: any): void {
-    this.updates.push({ fn, ctx })
-  }
+	addUpdater(fn: () => void, ctx?: any): void {
+		this.updates.push({ fn, ctx });
+	}
 
-  removeUpdater(fn: () => void, ctx?: any): void {
-    this.updates = this.updates.filter(item => {
-      if (ctx && ctx === item.ctx) {
-        return false;
-      }
-      return item.fn !== fn
-    });
-  }
+	removeUpdater(fn: () => void, ctx?: any): void {
+		this.updates = this.updates.filter(item => {
+			if (ctx && ctx === item.ctx) {
+				return false;
+			}
+			return item.fn !== fn;
+		});
+	}
 
 	impl(load: IFetcherFnContext<GetOptions, AnyResult<T>>): void {
 		this.load = load;
@@ -136,27 +134,27 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 
 	get(args?: GetOptions): T {
-    if (this.manual) {
-      const r = this.asyncGet(args);
-      if (!r.data) {
-        throw r;
-      } else if (r.data.type === 'rejected') {
-        throw r.data.data;
-      } else {
-        return r.data.data;
-      }
-    } else {
-      const key = this.hashArg(args);
-      this.init(key, args);
-      const error = this.holder.error(key);
-      if (error !== undefined) {
-        throw error;
-      }
-      if (!this.holder.has(key)) {
-        throw this.holder.await(key);
-      }
-      return this.holder.get(key);
-    }
+		if (this.manual) {
+			const r = this.asyncGet(args);
+			if (!r.data) {
+				throw r;
+			} else if (r.data.type === 'rejected') {
+				throw r.data.data;
+			} else {
+				return r.data.data;
+			}
+		} else {
+			const key = this.hashArg(args);
+			this.init(key, args);
+			const error = this.holder.error(key);
+			if (error !== undefined) {
+				throw error;
+			}
+			if (!this.holder.has(key)) {
+				throw this.holder.await(key);
+			}
+			return this.holder.get(key);
+		}
 	}
 
 	asyncSet(opt: SetOptions, arg?: GetOptions): TSyncPromise<T> {
@@ -171,30 +169,17 @@ export class Fetcher<T, GetOptions, SetOptions> implements IFetcher<T, GetOption
 	}
 }
 
-function createMemoryStore(opt: IOptionReducer<any>): MiddlewareAPI {
-	const { key } = opt;
-	const reducer = createReducer(opt);
-	let state: any = { [key]: {} };
-	const ret: MiddlewareAPI = {
-		getState() {
-			return state;
-		},
-		dispatch(action: any): any {
-			state = reducer(state, action);
-			return action;
-		},
-	};
-	return ret;
-}
+export type TMemoryStore = (opt: IOptionReducer<any>) => MiddlewareAPI;
 
 export type TFetcherFn<T, GetOptions, SetOptions> =
 	| IFetcherFunction<T, GetOptions, SetOptions>
 	| IFetcherFnContext<GetOptions, AnyResult<T>>;
 
 export interface ICreateOption {
-	createStore: typeof createMemoryStore;
-	action: string;
-	key: string;
+	createStore?: TMemoryStore;
+	action?: string;
+	key?: string;
+	initContainer?(key: string): TContainer<any> | undefined;
 }
 
 function getOption<T>(fn: ((opt: IFetcherOption) => T | undefined), option?: string | IFetcherOption): T | undefined {
@@ -226,14 +211,15 @@ export function create(opts?: ICreateOption) {
 		option?: string | IFetcherOption
 	): Fetcher<T, GetOptions, SetOptions> {
 		const interceptor = getOption(o => o.setItem, option);
-    const manual = !!getOption(o => o.manualStore, option);
-    const hashArgFn = getOption(o => o.hashArg, option);
+		const manual = !!getOption(o => o.manualStore, option);
+		const hashArgFn = getOption(o => o.hashArg, option);
 		const name = getName(option);
 		if (interceptor) {
 			setItemInterceptor[name] = interceptor;
 		}
+		const container = opts && opts.initContainer ? opts.initContainer(name) : undefined;
 		return new Fetcher<T, GetOptions, SetOptions>(
-			{ store, action, key, name, manual, hashArg: hashArgFn },
+			{ store, action, key, name, manual, hashArg: hashArgFn, container },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}
