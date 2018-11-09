@@ -186,7 +186,8 @@ export function create(opts?: ICreateOption) {
 	}
 
 	const action = opts ? opts.action : 'action';
-	const key = opts ? opts.key : 'local';
+  const key = opts ? opts.key : 'local';
+  const initialState = opts ? opts.initialState : undefined;
 
 	const createStore = opts && opts.createStore ? opts.createStore : createMemoryStore;
 	const setItemInterceptor: Partial<Record<string, typeof setItem>> = {};
@@ -194,7 +195,7 @@ export function create(opts?: ICreateOption) {
 		const iterceptor = setItemInterceptor[action.name];
 		return iterceptor ? iterceptor(action) : undefined;
 	}
-	const store = createStore({ action, key, setItem });
+	const store = createStore({ action, key, setItem }, initialState);
 	function createFetcherImpl<T, GetOptions = any, SetOptions = any>(
 		fns?: TFetcherFn<T, GetOptions, SetOptions>,
 		option?: string | IFetcherOption
@@ -206,9 +207,9 @@ export function create(opts?: ICreateOption) {
 		if (interceptor) {
 			setItemInterceptor[name] = interceptor;
 		}
-		const container = opts && opts.initContainer ? opts.initContainer(name) : undefined;
+
 		return new Fetcher<T, GetOptions, SetOptions>(
-			{ store, action, key, name, manual, hashArg: hashArgFn, container },
+			{ store, action, key, name, manual, hashArg: hashArgFn },
 			!fns ? {} : typeof fns === 'function' ? { load: fns } : fns
 		);
 	}

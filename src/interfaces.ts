@@ -65,7 +65,6 @@ export interface IOption<T> extends IOptionActions {
 	key: string; // key in store
 	manual: boolean;
 	hashArg?(arg?: any): string;
-	container?: TContainer<T>;
 }
 
 export type AnyResult<T> = T | Promise<T> | TSyncPromise<T> | Promise<T>[] | TSyncPromise<T>[];
@@ -137,19 +136,16 @@ export interface IOptionReducer$<State> {
 	setItem?(action: IActionFetch): Record<string, any> | undefined;
 }
 
-export type TMemoryStore = (opt: IOptionReducer<any>) => MiddlewareAPI;
+export type TMemoryStore = (opt: IOptionReducer<any>, initialState?: FetcherState) => MiddlewareAPI;
 
-export interface ICreationBaseOptions {
-	initContainer?(key: string): TContainer<any> | undefined;
-}
-
-export interface ICreateOption extends ICreationBaseOptions {
+export interface ICreateOption {
 	createStore?: TMemoryStore;
 	action?: string;
-	key?: string;
+  key?: string;
+  initialState?: FetcherState;
 }
 
-export interface IOptionStore extends ICreationBaseOptions {
+export interface IOptionStore  {
 	action: string;
 	key: string;
 }

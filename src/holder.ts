@@ -10,6 +10,7 @@ import {
 	TContainer,
 } from './interfaces';
 import { TSyncPromise } from './promise';
+import { snapshotStoreFetcher } from './memory';
 
 export function createActions<T>(opts: IOptionActions, holder: Holder<T>): IActionsLifecycle<T> {
 	const { store, name, action } = opts;
@@ -55,12 +56,12 @@ export function createActions<T>(opts: IOptionActions, holder: Holder<T>): IActi
 }
 
 export class Holder<T> implements IHolder<T> {
-	private container: TContainer<T> = this.props.container || {};
+	private container: TContainer<T> = snapshotStoreFetcher(this.getFetcherBlob());
 	static notExist = TSyncPromise.reject<any>(new Error("Doesn't exist"));
-	public actions: IActionsLifecycle<T>;
-	constructor(private props: IOption<T>) {
-		this.actions = createActions(props, this);
-	}
+
+  public actions: IActionsLifecycle<T> = createActions(this.props, this);
+
+  constructor(private props: IOption<T>) {}
 
 	set(params: Record<string, TSyncPromise<T>>): void;
 	set(key: string, defer: TSyncPromise<T>): void;
@@ -89,24 +90,24 @@ export class Holder<T> implements IHolder<T> {
 		const { store, action, name } = this.props;
 		store.dispatch({ type: action, action: 'clear', name });
 		this.container = {};
-	}
+  }
 
-	private getDataBlob(aKey: string): IDataItem | undefined {
-		const { store, key, name } = this.props;
-
+  private getFetcherBlob() {
+    const { store, key, name } = this.props;
 		const state = store.getState();
 		if (!state) {
 			return;
 		}
-		const holderState = state[key];
-		if (!holderState) {
+    const holderState = state[key];
+    if (!holderState) {
 			return;
-		}
-		const ptr = holderState[name];
-		if (!ptr) {
-			return;
-		}
-		return ptr[aKey];
+    }
+    return holderState[name];
+  }
+
+	private getDataBlob(aKey: string): IDataItem | undefined {
+    const ptr = this.getFetcherBlob();
+		return ptr ? ptr[aKey] : undefined;
 	}
 
 	get(key: string): T | undefined {

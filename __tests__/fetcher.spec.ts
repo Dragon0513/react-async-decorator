@@ -1,8 +1,7 @@
 import { create } from '../src/fetcher';
-import { createMemoryStore } from '../src/memory';
+import { FetcherState } from '../src/interfaces';
 import { TSyncPromise } from '../src/promise';
 import { createApi } from './helpers';
-import { snapshotStore } from '../src/memory';
 const createFetcher = create();
 
 test('fetcher test', async () => {
@@ -179,38 +178,29 @@ test('manualStore with caching', async () => {
 		{ manualStore: true }
 	);
 
-	const user12 = await fetcher.asyncGet([1, 2]);
-	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]).toEqual(user12);
+  const user12 = await fetcher.asyncGet([1, 2]);
+	expect(user12).toEqual([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]);
 	expect(counter).toBe(2);
 
 	const user23 = await fetcher.asyncGet([2, 3]);
-	expect([{ id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(user23);
+	expect(user23).toEqual([{ id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]);
 	expect(counter).toBe(3);
 
 	const userSync = fetcher.get([1, 2, 3]);
-	expect([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]).toEqual(userSync);
+	expect(userSync).toEqual([{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }, { id: 3, name: 'User 3' }]);
 	expect(counter).toBe(3);
 });
 
 test('fix initContainers backend', () => {
-	const store = {
-		test: {
-			'': {
-				data: 'Hello world',
-				loading: false,
-			},
-		},
-	};
-	const containerHash = snapshotStore(store);
-
-	const createFetcher = create({
-		initContainer(key: string) {
-			return containerHash[key];
-		},
-		createStore(opt) {
-			return createMemoryStore(opt, store);
-		},
-	});
+  const initialState: FetcherState = {
+    test: {
+      '': {
+        data: 'Hello world',
+        loading: false,
+      }
+    }
+  };
+	const createFetcher = create({ initialState });
 	const api = createApi();
 	const fetcher = createFetcher(api.fetch, { name: 'test' });
 	const data = fetcher.get();
