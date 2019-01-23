@@ -17,7 +17,7 @@ export function asyncClass(fetchers?: IUpdater | IUpdater[] | any): <T extends B
 export function asyncClassFactory(opts?: IAsyncFetch): typeof asyncClass;
 
 export const listenTo: (ctx: any, fetchers?: IUpdater | IUpdater[]) => void;
-export const listenClass: <T extends BaseT>(fetchers?: IUpdater | IUpdater[]) => (c: T) => T;
+export const listenClass: (fetchers?: IUpdater | IUpdater[]) =>  <T extends BaseT>(c: T) => T;
 export const asyncMethod: (target: any, propertyKey: string) => void;
 export function asyncMethodFactory(opts?: IAsyncFetch): typeof asyncMethod
 
