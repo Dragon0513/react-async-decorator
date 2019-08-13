@@ -5,7 +5,7 @@ import { asyncMethod, listenTo } from '../index';
 import { create } from '../src/fetcher';
 const createFetcher = create();
 import * as Enzyme from 'enzyme';
-import EnzymeAdapter from 'enzyme-adapter-react-16';
+import * as EnzymeAdapter from 'enzyme-adapter-react-16';
 import { IFetcher } from '../src/interfaces';
 
 Enzyme.configure({ adapter: new EnzymeAdapter() });

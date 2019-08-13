@@ -2,8 +2,9 @@ import * as React from 'react';
 import { asyncClass } from '../index';
 import { create } from '../src/fetcher';
 import * as Enzyme from 'enzyme';
-import EnzymeAdapter from 'enzyme-adapter-react-16';
-Enzyme.configure({ adapter: new EnzymeAdapter() });
+import * as EnzymeAdapter from 'enzyme-adapter-react-16';
+const adapter = new EnzymeAdapter();
+Enzyme.configure({ adapter });
 
 const createFetcher = create();
 

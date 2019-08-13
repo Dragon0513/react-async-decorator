@@ -1,6 +1,6 @@
 import { createStore } from 'redux';
 import { initRedux } from '../src/redux';
-import { IOptionStore } from '../src/reduxReducer';
+import { IOptionStore } from '../src/interfaces';
 
 const OPTIONS: IOptionStore = { action: 'ACTION', key: 'action' };
 

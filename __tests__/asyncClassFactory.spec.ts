@@ -11,7 +11,7 @@ const createFetcher = create();
 	renderLoader: 'loader',
 	renderError: err => React.createElement('div', {}, err.message),
 })()
-class Test extends React.Component<{ fetcher: IFetcher0<string> }, {}> {
+class Test extends React.Component<{ fetcher: IFetcher<string> }, {}> {
 	render() {
 		const data = this.props.fetcher.get();
 		return React.createElement('div', {}, data);
