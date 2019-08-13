@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.7"></a>
+## [0.2.7](https://github.com/lexich/react-async-decorator/compare/v0.2.6...v0.2.7) (2019-08-13)
+
+
+### Bug Fixes
+
+* es6 ([4f92ad1](https://github.com/lexich/react-async-decorator/commit/4f92ad1))
+
+
+
 <a name="0.2.6"></a>
 ## [0.2.6](https://github.com/lexich/react-async-decorator/compare/v0.2.5...v0.2.6) (2019-01-23)
 
