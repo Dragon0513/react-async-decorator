@@ -75,39 +75,39 @@ function listenTo(ctx, fetchers) {
 function asyncClassFactory(opts) {
   return function listenWrap(fetchers) {
     return function asyncClass(Base) {
-      __extends(WrapClass, Base);
-
-      function WrapClass() {
-        Base.apply(this, arguments);
-        var ptrLoader = this.renderLoader;
-        var ptrError = this.renderError;
-        if (opts) {
-          var renderLoader = opts.renderLoader;
-          if (typeof renderLoader === 'function') {
-            ptrLoader = renderLoader;
-          } else if (typeof renderLoader === 'string') {
-            ptrLoader = this[renderLoader];
+      class WrapClass extends Base {
+        constructor(...args) {
+          super(...args);
+          var ptrLoader = this.renderLoader;
+          var ptrError = this.renderError;
+          if (opts) {
+            var renderLoader = opts.renderLoader;
+            if (typeof renderLoader === 'function') {
+              ptrLoader = renderLoader;
+            } else if (typeof renderLoader === 'string') {
+              ptrLoader = this[renderLoader];
+            }
+            var renderError = opts.renderError;
+            if (typeof renderError === 'function') {
+              ptrError = renderError;
+            } else if (typeof renderError === 'string') {
+              ptrError = this[renderError];
+            }
           }
-          var renderError = opts.renderError;
-          if (typeof renderError === 'function') {
-            ptrError = renderError;
-          } else if (typeof renderError === 'string') {
-            ptrError = this[renderError];
+          if (this.renderLoader === undefined) {
+            this.renderLoader = ptrLoader;
+          } else {
+            ptrLoader = this.renderLoader;
           }
+          if (this.renderError === undefined) {
+            this.renderError = ptrError;
+          } else {
+            ptrError = this.renderError;
+          }
+          this.render = wrapRender(this.render, ptrLoader, ptrError);
+          listenTo(this, fetchers);
+          return this;
         }
-        if (this.renderLoader === undefined) {
-          this.renderLoader = ptrLoader;
-        } else {
-          ptrLoader = this.renderLoader;
-        }
-        if (this.renderError === undefined) {
-          this.renderError = ptrError;
-        } else {
-          ptrError = this.renderError;
-        }
-        this.render = wrapRender(this.render, ptrLoader, ptrError);
-        listenTo(this, fetchers);
-        return this;
       }
       return WrapClass;
     }
@@ -119,7 +119,6 @@ module.exports.listenClass = listenClass;
 function listenClass(Base, fetchers) {
     __extends(WrapClass, Base);
     function WrapClass() {
-      Base.apply(this, arguments);
       listenTo(this, fetchers);
       return this;
     };
