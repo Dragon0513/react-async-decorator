@@ -39,7 +39,12 @@
     "typescript": "3.5.3"
   },
   "resolutions": {
-    "@types/react": "16.9.1"
+    "@types/react": "16.9.1",
+    "cryptiles": "^4.1.2",
+    "stringstream": "^0.0.6",
+    "extend": "^3.0.2",
+    "atob": "^2.1.0",
+    "lodash.template": "^4.5.0"
   },
   "dependencies": {},
   "jest": {
